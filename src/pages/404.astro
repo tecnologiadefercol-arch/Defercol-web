@@ -1,0 +1,48 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Página no encontrada" noindex>
+  <section class="section notfound">
+    <div class="container notfound__inner">
+      <span class="eyebrow">Error 404</span>
+      <h1>Esa página no existe.</h1>
+      <p class="lead">El enlace pudo cambiar. Vuelve al inicio o explora el catálogo.</p>
+      <div class="notfound__actions">
+        <a class="btn btn-primary" href="/">Ir al inicio</a>
+        <a class="btn btn-ghost" href="/productos">Ver productos</a>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .notfound {
+    display: grid;
+    align-items: center;
+    /* La página corta no deja el pie a media pantalla. */
+    min-height: calc(100vh - var(--header-h) - 320px);
+    min-height: calc(100svh - var(--header-h) - 320px);
+  }
+
+  .notfound__inner {
+    text-align: center;
+    padding-block: var(--space-7, 40px);
+  }
+
+  .notfound h1 {
+    margin-bottom: var(--space-3, 12px);
+  }
+
+  .lead {
+    max-width: 44ch;
+    margin: 0 auto var(--space-5, 24px);
+  }
+
+  .notfound__actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--space-3, 12px);
+  }
+</style>

@@ -1,0 +1,1374 @@
+---
+/**
+ * CatalogFilm — la página de inicio como un recorrido continuo por la planta.
+ *
+ * El brand film queda fijo de fondo durante todo el scroll. Cinco "paradas"
+ * (hero, racores, válvulas, tubería, planta completa) unidas por cuatro clips:
+ * entre parada y parada la cámara avanza al ritmo del scroll; en cada parada la
+ * cámara se detiene y el contenido real de la página (líneas de producto,
+ * destacados, razones, contacto) aparece sobre un panel de cristal.
+ *
+ * Uso:
+ *   <CatalogFilm>
+ *     <Fragment slot="stop-1">…</Fragment>   contenido bajo el titular de la parada 1
+ *     …
+ *     <Fragment slot="stop-4">…</Fragment>
+ *   </CatalogFilm>
+ *
+ * Assets en public/videos/catalogo/:
+ *   clip-k.mp4    1080p, keyframe cada 6 cuadros (scrub fluido en escritorio)
+ *   clip-k-m.mp4  720p, keyframe cada 4 cuadros (móvil)
+ *   stop-k.webp   cuadro real del film en cada parada, extraído del máster 4K
+ *   stop-k@2x.webp  el mismo cuadro a 3840 px para pantallas retina (srcset)
+ *
+ * Material: el panel es `.glass` (global.css, bloque F) y el film entero es
+ * `.theme-dark`, así que las tarjetas y botones del sistema funcionan dentro
+ * sin reglas especiales. El script re-inicializa en astro:page-load y limpia
+ * en astro:before-swap (View Transitions); sin ClientRouter se comporta igual.
+ *
+ * Sin JavaScript se ve la parada 0 como hero estático y las secciones en flujo
+ * normal. Con prefers-reduced-motion no se cargan vídeos: las paradas se funden.
+ */
+import { existsSync } from 'node:fs';
+import { site, whatsappLink } from '../data/site';
+
+interface Cta {
+  label: string;
+  href: string;
+  kind: 'primary' | 'ghost' | 'whatsapp';
+  external?: boolean;
+  download?: boolean;
+}
+
+// El CTA del catálogo solo promete "Descargar" cuando el PDF existe en public/
+// (misma comprobación que catalogo.astro). Mientras tanto lleva a /catalogo,
+// donde se pide por WhatsApp, con una etiqueta que no promete un archivo.
+const pdfExists = existsSync(new URL(`../../public${site.catalogPath}`, import.meta.url));
+const pdfCta: Cta = pdfExists
+  ? { label: 'Descargar PDF', href: site.catalogPath, kind: 'ghost', download: true }
+  : { label: 'Ver el catálogo', href: '/catalogo', kind: 'ghost' };
+
+interface Stop {
+  id: string;
+  label: string;
+  eyebrow: string;
+  title: string;
+  body: string;
+  ctas: Cta[];
+  /** object-position del cuadro: dónde está el sujeto para el recorte vertical en móvil. */
+  focus: string;
+}
+
+const base = '/videos/catalogo';
+
+const stops: Stop[] = [
+  {
+    id: 'inicio',
+    label: 'Inicio',
+    eyebrow: 'Distribuidor industrial · Colombia',
+    title: 'Racores, válvulas e instrumentación.',
+    body: 'Conexión, control y medición de fluidos con marcas líderes, asesoría técnica y cotización por WhatsApp.',
+    ctas: [
+      { label: 'Ver productos', href: '/productos', kind: 'primary' },
+      pdfCta,
+    ],
+    focus: '58% 50%',
+  },
+  {
+    id: 'lineas',
+    label: 'Líneas',
+    eyebrow: 'Racores y conexiones',
+    title: 'Una conexión para cada línea.',
+    body: 'Racores de tubo, compresión y rosca en acero inoxidable, bronce y acero al carbono.',
+    ctas: [{ label: 'Ver racores', href: '/productos?categoria=racores', kind: 'primary' }],
+    focus: '50% 55%',
+  },
+  {
+    id: 'destacados',
+    label: 'Destacados',
+    eyebrow: 'Válvulas y manifolds',
+    title: 'Lo que más piden las plantas.',
+    body: 'Válvulas, manifolds y manómetros de alta rotación, con inventario disponible.',
+    ctas: [
+      { label: 'Ver válvulas', href: '/productos?categoria=valvulas', kind: 'primary' },
+      { label: 'Todo el catálogo', href: '/productos', kind: 'ghost' },
+    ],
+    focus: '50% 50%',
+  },
+  {
+    id: 'por-que',
+    label: 'Por qué Defercol',
+    eyebrow: 'Tubería e instalación',
+    title: 'Más que un proveedor.',
+    body: 'Tubería, mangueras y reguladores para la instalación completa, con el respaldo técnico que tu operación exige.',
+    ctas: [
+      { label: 'Ver tubería', href: '/productos?categoria=tuberia', kind: 'primary' },
+      { label: 'Ver reguladores', href: '/productos?categoria=reguladores', kind: 'ghost' },
+    ],
+    focus: '55% 50%',
+  },
+  {
+    id: 'contacto',
+    label: 'Cotizar',
+    eyebrow: 'Toda tu operación',
+    title: 'Cotiza hoy mismo.',
+    body: 'Asesoría especializada, inventario disponible y despacho a todo Colombia. Escríbenos con la referencia.',
+    ctas: [
+      { label: 'Cotizar por WhatsApp', href: whatsappLink(), kind: 'whatsapp', external: true },
+      pdfCta,
+    ],
+    focus: '50% 50%',
+  },
+];
+
+const clips = [1, 2, 3, 4].map((k) => ({
+  src: `${base}/clip-${k}.mp4`,
+  mobile: `${base}/clip-${k}-m.mp4`,
+}));
+
+const config = { clips, focus: stops.map((s) => s.focus) };
+---
+
+<div class="film theme-dark" id="recorrido" data-film={JSON.stringify(config)}>
+  <!-- Fondo: escenario fijo con las capas de vídeo e imagen -->
+  <div class="film__bg" aria-hidden="true">
+    <div class="film__stage">
+      <div class="film__layers">
+        {
+          stops.map((s, i) => (
+            <img
+              class="film__still"
+              data-still={i}
+              src={i === 0 ? `${base}/stop-${i}.webp` : undefined}
+              srcset={i === 0 ? `${base}/stop-${i}.webp 1920w, ${base}/stop-${i}@2x.webp 3840w` : undefined}
+              data-src={i === 0 ? undefined : `${base}/stop-${i}.webp`}
+              data-srcset={i === 0 ? undefined : `${base}/stop-${i}.webp 1920w, ${base}/stop-${i}@2x.webp 3840w`}
+              sizes="100vw"
+              alt=""
+              width="1920"
+              height="1080"
+              fetchpriority={i === 0 ? 'high' : undefined}
+              decoding="async"
+              style={`object-position:${s.focus}; opacity:${i === 0 ? 1 : 0}`}
+            />
+          ))
+        }
+        {clips.map((_, k) => <div class="film__clip" data-clip={k + 1} />)}
+      </div>
+      <div class="film__scrim"></div>
+    </div>
+  </div>
+
+  <!-- Flujo: paradas (contenido real) y tramos (la cámara avanza) -->
+  <div class="film__flow">
+    {
+      stops.map((s, i) => (
+        <>
+          <section class:list={['film__stop', i === 0 && 'film__stop--hero']} id={s.id} data-stop={i}>
+            <div class="container">
+              <div class:list={['film__panel', i === 0 ? 'film__panel--hero' : 'glass']}>
+                <header class="film__head">
+                  <span class="film__num mono" aria-hidden="true">
+                    {String(i + 1).padStart(2, '0')} / {String(stops.length).padStart(2, '0')}
+                  </span>
+                  <span class="film__eyebrow">{s.eyebrow}</span>
+                  {i === 0 ? (
+                    <h1 class="film__title film__title--display">{s.title}</h1>
+                  ) : (
+                    <h2 class="film__title">{s.title}</h2>
+                  )}
+                  <p class="film__body">{s.body}</p>
+                  <div class="film__ctas">
+                    {s.ctas.map((c) => (
+                      <a
+                        class:list={[
+                          'btn',
+                          c.kind === 'primary' && 'btn-primary',
+                          c.kind === 'ghost' && 'btn-glass',
+                          c.kind === 'whatsapp' && 'btn-whatsapp',
+                        ]}
+                        href={c.href}
+                        target={c.external ? '_blank' : undefined}
+                        rel={c.external ? 'noopener' : undefined}
+                        download={c.download ? '' : undefined}
+                      >
+                        {c.label}
+                      </a>
+                    ))}
+                  </div>
+                </header>
+                {i === 1 && <div class="film__content"><slot name="stop-1" /></div>}
+                {i === 2 && <div class="film__content"><slot name="stop-2" /></div>}
+                {i === 3 && <div class="film__content"><slot name="stop-3" /></div>}
+                {i === 4 && <div class="film__content"><slot name="stop-4" /></div>}
+              </div>
+            </div>
+          </section>
+          {i < clips.length && <div class="film__gap" data-gap={i + 1} aria-hidden="true" />}
+        </>
+      ))
+    }
+  </div>
+
+  <!-- UI fija: ruta de paradas, progreso, pista de scroll y pista de carga -->
+  <div class="film__ui">
+    <div class="film__ui-sticky">
+      <nav class="film__route glass--thin" aria-label="Paradas del recorrido">
+        {
+          stops.map((s, i) => (
+            <button type="button" class="film__dot" data-dot={i} aria-current={i === 0 ? 'step' : undefined}>
+              <span class="film__dot-label glass--thin">{s.label}</span>
+              <i></i>
+            </button>
+          ))
+        }
+      </nav>
+      <div class="film__progress" aria-hidden="true"><span></span></div>
+      <div class="film__hint glass--thin" aria-hidden="true">
+        <span>Desplázate para recorrer</span>
+        <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l5 5 5-5"/></svg>
+      </div>
+      <!-- Pista discreta: solo si el visitante ya hizo scroll y el primer clip aún descarga. -->
+      <div class="film__loading glass--thin" role="status" aria-live="polite" hidden>
+        <i aria-hidden="true"></i>
+        <span>Cargando el recorrido…</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<noscript>
+  <style>
+    .film__gap {
+      display: none !important;
+    }
+    .film__ui {
+      display: none !important;
+    }
+    .film__stop--hero {
+      min-height: 70vh !important;
+    }
+  </style>
+</noscript>
+
+<style>
+  .film {
+    position: relative;
+    isolation: isolate;
+    background: var(--navy-900);
+    color: var(--color-text);
+    --glass-shift: 0; /* -1..1, lo mueve el script con el scroll: la luz "resbala" */
+  }
+
+  /* ---- fondo fijo ---- */
+  .film__bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .film__stage {
+    position: sticky;
+    top: var(--header-h);
+    height: calc(100vh - var(--header-h));
+    height: calc(100svh - var(--header-h));
+    overflow: hidden;
+    background: var(--navy-900);
+  }
+
+  .film__layers,
+  .film__scrim {
+    position: absolute;
+    inset: 0;
+  }
+
+  .film__layers {
+    z-index: 1;
+    isolation: isolate;
+  }
+
+  .film__scrim {
+    z-index: 2;
+    background:
+      linear-gradient(90deg, rgb(var(--color-scrim) / 0.62) 0%, rgb(var(--color-scrim) / 0.3) 34%, rgb(var(--color-scrim) / 0.05) 62%, transparent 80%),
+      linear-gradient(0deg, rgb(var(--color-scrim) / 0.42) 0%, transparent 32%);
+  }
+
+  .film__still,
+  .film__clip,
+  .film__clip :global(video) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 50%;
+  }
+
+  .film__still,
+  .film__clip {
+    opacity: 0;
+    will-change: opacity;
+  }
+
+  .film__clip :global(video) {
+    display: block;
+  }
+
+  /* ---- flujo de paradas ---- */
+  .film__flow {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Hueco entre paradas: la pantalla completa (donde el panel anterior ya salió)
+     más el recorrido de scroll durante el que vuela la cámara. */
+  .film__gap {
+    height: calc(100vh + 130vh);
+    height: calc(100svh + 130vh);
+    pointer-events: none;
+  }
+
+  .film__stop {
+    padding-block: clamp(var(--space-8), 8vh, var(--space-11));
+  }
+
+  .film__stop--hero {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - var(--header-h));
+    min-height: calc(100svh - var(--header-h));
+    padding-block: 0 0;
+    margin-bottom: 20vh; /* pausa antes de que la cámara arranque */
+  }
+
+  /* La última parada llena la pantalla para que el fondo siga fijo hasta el final. */
+  .film__stop:last-of-type {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - var(--header-h));
+    min-height: calc(100svh - var(--header-h));
+  }
+
+  /* ---- material ----
+     El panel es .glass (global): un backdrop-filter, reflejo especular que se
+     mueve con --glass-shift y borde refractivo. Las tarjetas interiores son
+     .glass--flat (sin segundo backdrop: anidarlos es caro y no aporta). */
+  .film__panel {
+    padding: var(--panel-pad);
+  }
+
+  .film__panel--hero {
+    position: relative;
+    max-width: 680px;
+    padding: 0;
+  }
+
+  /* Contraste AA del texto del hero sobre la foto: un velo suave que nace detrás
+     del bloque de texto y se desvanece hacia la derecha, sin tocar los assets. */
+  .film__panel--hero::before {
+    content: '';
+    position: absolute;
+    inset: -12% -40% -12% -24%;
+    z-index: -1;
+    border-radius: 48px;
+    background: radial-gradient(ellipse at 30% 50%, rgb(var(--color-scrim) / 0.55) 0%, rgb(var(--color-scrim) / 0.3) 45%, transparent 75%);
+    pointer-events: none;
+  }
+
+  .film__head {
+    max-width: 720px;
+  }
+
+  .film__num {
+    display: block;
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-caps);
+    color: var(--color-text-2);
+  }
+
+  .film__eyebrow {
+    display: block;
+    margin-top: var(--space-3);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--color-accent-text);
+  }
+
+  .film__title {
+    margin: var(--space-3) 0 0;
+    color: var(--color-heading);
+    font-size: var(--text-4xl);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    text-shadow: 0 2px 24px rgb(var(--color-scrim) / 0.6);
+  }
+
+  .film__title--display {
+    font-size: var(--text-display);
+    line-height: 1.02;
+    letter-spacing: var(--tracking-display);
+  }
+
+  .film__body {
+    margin: var(--space-4) 0 0;
+    max-width: 60ch;
+    font-size: var(--text-lg);
+    line-height: var(--leading-normal);
+    color: var(--color-text-2);
+  }
+
+  .film__panel--hero .film__body {
+    color: var(--color-text);
+    text-shadow: 0 1px 12px rgb(var(--color-scrim) / 0.5);
+  }
+
+  .film__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+  }
+
+  .film__content {
+    margin-top: var(--space-5);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .film__content :global(.film-label) {
+    margin: 0 0 var(--space-4);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--color-text-3);
+  }
+
+  /* Tarjetas de producto dentro del cristal: mismo material plano que el resto
+     (las reglas quedan expresadas en tokens; sobran cuando ProductCard adopte
+     `card card--interactive glass--flat`). */
+  .film__content :global(.product-card) {
+    background: var(--glass-flat-bg);
+    border-color: var(--glass-flat-border);
+    border-radius: var(--radius-lg);
+    color: var(--color-text);
+    box-shadow: inset 0 1px 0 var(--glass-flat-highlight);
+  }
+
+  .film__content :global(.product-card:hover) {
+    background: var(--glass-flat-bg-hover);
+    box-shadow: inset 0 1px 0 var(--glass-flat-highlight), var(--shadow-2);
+  }
+
+  .film__content :global(.product-card__media) {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .film__content :global(.product-card h3 a) {
+    color: var(--color-heading);
+  }
+
+  .film__content :global(.product-card p) {
+    color: var(--color-text-2);
+  }
+
+  /* Sobre el cristal el gris terciario bajaba a ~3:1; aquí SKU y categoría usan el secundario. */
+  .film__content :global(.product-card__cat),
+  .film__content :global(.product-card__sku) {
+    color: var(--color-text-2);
+    border-color: var(--color-border);
+  }
+
+  /* ---- revelado ----
+     El panel entra con opacidad y 16 px; las tarjetas, escalonadas por índice
+     (--i, lo asigna el script) y con un desenfoque que se resuelve. El estado
+     final es filter:none para que la capa compuesta desaparezca al terminar y
+     el texto vuelva a pintarse nítido. */
+  .film--js .film__panel:not(.film__panel--hero) {
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity var(--dur-reveal) var(--ease-out-expo),
+      transform var(--dur-reveal) var(--ease-out-expo);
+  }
+
+  .film--js .film__stop.is-in .film__panel {
+    opacity: 1;
+    transform: none;
+  }
+
+  .film--js .film__content :global([data-reveal]) {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+    filter: blur(10px);
+    transition:
+      opacity var(--dur-reveal) var(--ease-out-expo),
+      transform var(--dur-reveal) var(--ease-out-expo),
+      filter var(--dur-reveal) var(--ease-out-expo);
+    transition-delay: calc(140ms + min(var(--i, 0), 6) * var(--stagger));
+  }
+
+  .film--js .film__stop.is-in :global([data-reveal]) {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  /* Con el foco dentro de la parada (teclado) el escalonado no espera: la tarjeta
+     enfocada tiene que verse de inmediato. */
+  .film--js .film__stop:focus-within :global([data-reveal]) {
+    transition-delay: 0s;
+    transition-duration: var(--dur-fast);
+  }
+
+  /* ---- rendimiento: equipos modestos ----
+     Menos desenfoque en el panel (lo baja el token global), sin desenfoque por
+     tarjeta, sin reflejo animado y sin backdrop en las píldoras. */
+  :global(html.perf-lite) .film--js .film__content :global([data-reveal]),
+  :global(html[data-perf='lite']) .film--js .film__content :global([data-reveal]) {
+    filter: none;
+  }
+
+  :global(html.perf-lite) .film :global(.btn-glass),
+  :global(html[data-perf='lite']) .film :global(.btn-glass),
+  :global(html.perf-lite) .film :global(.glass--thin),
+  :global(html[data-perf='lite']) .film :global(.glass--thin) {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  :global(html.perf-lite) .film :global(.glass--thin),
+  :global(html[data-perf='lite']) .film :global(.glass--thin) {
+    background: rgb(var(--color-scrim) / 0.72);
+  }
+
+  /* ---- UI fija ---- */
+  .film__ui {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .film__ui-sticky {
+    position: sticky;
+    top: var(--header-h);
+    height: calc(100vh - var(--header-h));
+    height: calc(100svh - var(--header-h));
+  }
+
+  .film__route {
+    position: absolute;
+    right: clamp(14px, 2.4vw, 30px);
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-1);
+    pointer-events: auto;
+    border-radius: var(--radius-pill);
+    box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-2);
+  }
+
+  .film__route::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: var(--space-5);
+    bottom: var(--space-5);
+    width: 2px;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.22);
+  }
+
+  .film__dot {
+    position: relative;
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .film__dot i {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.45);
+    transition:
+      transform var(--dur-base) var(--ease-out-expo),
+      background-color var(--dur-base) var(--ease-out),
+      box-shadow var(--dur-base) var(--ease-out);
+  }
+
+  .film__dot:hover i,
+  .film__dot:focus-visible i {
+    background: #fff;
+    transform: scale(1.25);
+  }
+
+  .film__dot[aria-current='step'] i {
+    background: var(--color-accent);
+    transform: scale(1.4);
+    box-shadow: 0 0 0 5px rgb(242 118 27 / 0.25);
+  }
+
+  .film__dot:focus-visible {
+    outline-offset: 2px;
+  }
+
+  /* Etiqueta solo en hover/foco del riel: fija, invadía el panel y la cuarta tarjeta. */
+  .film__dot-label {
+    position: absolute;
+    right: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%) translateX(6px);
+    white-space: nowrap;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--color-heading);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+  }
+
+  .film__dot:hover .film__dot-label,
+  .film__dot:focus-visible .film__dot-label,
+  .film__route:hover .film__dot[aria-current='step'] .film__dot-label {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+
+  .film__progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .film__progress span {
+    display: block;
+    height: 100%;
+    width: 100%;
+    transform-origin: 0 50%;
+    transform: scaleX(0);
+    background: var(--color-accent);
+  }
+
+  /* Pista discreta: píldora de una línea con un chevron de 16 px que late. */
+  .film__hint {
+    position: absolute;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: 0.02em;
+    color: var(--color-text);
+    transition: opacity var(--dur-base) var(--ease-out);
+  }
+
+  .film__hint svg {
+    flex: none;
+    color: var(--color-accent);
+    animation: film-beat 1.7s ease-in-out infinite;
+  }
+
+  @keyframes film-beat {
+    0%,
+    100% {
+      transform: translateY(0);
+      opacity: 0.6;
+    }
+    50% {
+      transform: translateY(3px);
+      opacity: 1;
+    }
+  }
+
+  .film__loading {
+    position: absolute;
+    left: 50%;
+    top: var(--space-4);
+    transform: translateX(-50%) translateY(-6px);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4) var(--space-2) var(--space-3);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: 0.02em;
+    color: var(--color-text);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out-expo);
+  }
+
+  .film__loading.is-visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .film__loading i {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: var(--color-accent);
+    animation: film-spin 0.9s linear infinite;
+  }
+
+  @keyframes film-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (max-width: 860px) {
+    .film__scrim {
+      background: linear-gradient(0deg, rgb(var(--color-scrim) / 0.85) 0%, rgb(var(--color-scrim) / 0.5) 40%, rgb(var(--color-scrim) / 0.15) 70%, transparent 90%);
+    }
+
+    .film__gap {
+      height: calc(100vh + 110vh);
+      height: calc(100svh + 110vh);
+    }
+
+    .film__stop--hero {
+      align-items: flex-end;
+      padding-bottom: calc(84px + env(safe-area-inset-bottom)); /* libra el botón flotante de WhatsApp */
+      margin-bottom: 15vh;
+    }
+
+    .film__panel {
+      padding: var(--space-5) var(--space-4);
+    }
+
+    .film__panel--hero {
+      padding: 0;
+    }
+
+    .film__content {
+      margin-top: var(--space-4);
+      padding-top: var(--space-4);
+    }
+
+    .film__ctas {
+      gap: var(--space-2);
+    }
+
+    /* En móvil basta la barra de progreso: el riel tapaba el borde del contenido. */
+    .film__route,
+    .film__hint {
+      display: none;
+    }
+  }
+
+  @media (max-width: 480px) {
+    /* CTAs apilados al mismo ancho (dos filas a ancho completo si no caben). */
+    .film__ctas .btn {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .film__hint svg,
+    .film__loading i {
+      animation: none;
+    }
+
+    .film--js .film__panel:not(.film__panel--hero),
+    .film--js .film__content :global([data-reveal]) {
+      opacity: 1;
+      transform: none;
+      filter: none;
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  type Config = { clips: { src: string; mobile: string }[]; focus: string[] };
+
+  type Layer = {
+    el: HTMLElement;
+    start: number; // px de scroll
+    end: number;
+    /** Índice de la parada (capas de imagen). */
+    still?: number;
+    video?: HTMLVideoElement;
+    src?: string;
+    loading?: boolean;
+    ready?: boolean;
+    cur: number;
+    target: number;
+    visible: boolean;
+    fromFocus?: string;
+    toFocus?: string;
+  };
+
+  /**
+   * Ciclo de vida con View Transitions: este módulo se evalúa una sola vez por
+   * sesión, pero el DOM del inicio se reemplaza en cada navegación. init()
+   * devuelve una función de limpieza; astro:page-load crea la instancia y
+   * astro:before-swap la destruye (listeners de window, rAF, observers). Sin
+   * ClientRouter, mount() se llama de inmediato y el flujo es idéntico.
+   * Los clips se cargan de forma progresiva por URL: al volver al inicio la
+   * caché HTTP del navegador los sirve sin repetir la descarga.
+   */
+  type Instance = { root: HTMLElement; destroy: () => void };
+  let current: Instance | null = null;
+
+  /**
+   * Heurística de rendimiento: si nadie (Layout) la decidió ya, se marca el
+   * documento con data-perf="lite" en equipos modestos (poca memoria, pocos
+   * núcleos, puntero grueso o ahorro de datos). ?perf=lite|full fuerza para QA.
+   */
+  function detectPerf() {
+    const html = document.documentElement;
+    if (html.dataset.perf || html.classList.contains('perf-lite')) return;
+    const n = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
+    const q = new URLSearchParams(location.search).get('perf');
+    const lite =
+      q === 'lite' ||
+      (q !== 'full' &&
+        ((n.deviceMemory !== undefined && n.deviceMemory <= 4) ||
+          (n.hardwareConcurrency !== undefined && n.hardwareConcurrency <= 4) ||
+          matchMedia('(hover: none) and (pointer: coarse)').matches ||
+          !!n.connection?.saveData));
+    html.dataset.perf = lite ? 'lite' : 'full';
+  }
+
+  function mount() {
+    const root = document.querySelector<HTMLElement>('.film');
+    if (!root) return;
+    if (current && current.root === root) return; // idempotente
+    current?.destroy();
+    detectPerf();
+    current = { root, destroy: init(root) };
+  }
+
+  function unmount() {
+    current?.destroy();
+    current = null;
+  }
+
+  mount();
+  document.addEventListener('astro:page-load', mount);
+  document.addEventListener('astro:before-swap', unmount);
+
+  function init(root: HTMLElement): () => void {
+    root.classList.add('film--js');
+    // Listeners de window con una sola señal de cancelación.
+    const ac = new AbortController();
+    const sig = { signal: ac.signal, passive: true } as AddEventListenerOptions;
+    let rafId = 0;
+    let destroyed = false;
+    const config: Config = JSON.parse(root.dataset.film || '{}');
+    const stage = root.querySelector<HTMLElement>('.film__stage')!;
+    const stills = Array.from(root.querySelectorAll<HTMLImageElement>('.film__still'));
+    const clipHosts = Array.from(root.querySelectorAll<HTMLElement>('.film__clip'));
+    const stopEls = Array.from(root.querySelectorAll<HTMLElement>('.film__stop'));
+    const panels = stopEls.map((s) => s.querySelector<HTMLElement>('.film__panel'));
+    const gapEls = Array.from(root.querySelectorAll<HTMLElement>('.film__gap'));
+    const dots = Array.from(root.querySelectorAll<HTMLButtonElement>('.film__dot'));
+    const progress = root.querySelector<HTMLElement>('.film__progress span')!;
+    const hint = root.querySelector<HTMLElement>('.film__hint');
+    const loading = root.querySelector<HTMLElement>('.film__loading');
+
+    // Índice por tarjeta para el revelado escalonado (--i) dentro de cada parada.
+    root.querySelectorAll<HTMLElement>('.film__content').forEach((content) => {
+      const items = content.querySelectorAll<HTMLElement>('.grid > *, .brands-strip > li');
+      items.forEach((el, i) => {
+        el.dataset.reveal = '';
+        el.style.setProperty('--i', String(i));
+      });
+    });
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const coarse = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+    const smallMQ = window.matchMedia('(max-width: 860px)');
+    const isMobile = () => coarse || smallMQ.matches;
+    // Sin vídeo (las paradas se funden entre sí): movimiento reducido, ahorro de
+    // datos o conexión 2g. Los clips pesan 7–13 MB cada uno.
+    const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } })
+      .connection;
+    const noVideo = reduce || !!conn?.saveData || /2g$/.test(conn?.effectiveType || '');
+
+    const N = stills.length;
+    const clamp = (x: number, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+    const smooth = (x: number) => {
+      x = clamp(x);
+      return x * x * (3 - 2 * x);
+    };
+
+    // Capas: imagen por parada y vídeo por tramo. Los rangos (en px de scroll)
+    // se calculan desde el DOM en layout().
+    const stopLayers: Layer[] = stills.map((el, i) => ({ el, still: i, start: 0, end: 0, cur: 0, target: 0, visible: false }));
+    const clipLayers: Layer[] = clipHosts.map((el, k) => ({
+      el,
+      start: 0,
+      end: 0,
+      src: isMobile() ? config.clips[k].mobile : config.clips[k].src,
+      cur: 0,
+      target: 0,
+      visible: false,
+      fromFocus: config.focus[k],
+      toFocus: config.focus[k + 1],
+    }));
+    // Orden intercalado: parada0, clip1, parada1, clip2, …
+    const layers: Layer[] = [];
+    stopLayers.forEach((s, i) => {
+      layers.push(s);
+      if (clipLayers[i]) layers.push(clipLayers[i]);
+    });
+
+    let headerH = 72;
+    let stageH = 0;
+    let trackTop = 0;
+    let trackH = 0;
+    let active = -1;
+    let ticking = false;
+    let laidOutW = window.innerWidth;
+    let fadePx = 60;
+    let filmVisible = true; // lo decide rootIO: fuera de pantalla no hay scroll ni rAF que atender
+    // Geometría de las paradas cacheada en layout(): read() no toca el DOM por frame.
+    const stopTops: number[] = [];
+    const stopHeights: number[] = [];
+
+    function docTop(el: HTMLElement) {
+      return el.getBoundingClientRect().top + (window.scrollY || window.pageYOffset);
+    }
+
+    function layout() {
+      headerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72;
+      stageH = stage.getBoundingClientRect().height || window.innerHeight - headerH;
+      laidOutW = window.innerWidth;
+      trackTop = docTop(root);
+      trackH = root.getBoundingClientRect().height;
+      fadePx = Math.max(40, stageH * 0.08);
+
+      // Un clip se reproduce solo cuando el panel anterior ya salió por arriba y
+      // antes de que el siguiente asome por abajo: desde que el hueco ocupa toda
+      // la pantalla hasta que su borde inferior llega al pie de la pantalla. Así,
+      // mientras un panel está a la vista, el fondo es siempre la imagen nítida.
+      gapEls.forEach((g, k) => {
+        const top = docTop(g);
+        const h = g.getBoundingClientRect().height;
+        clipLayers[k].start = top - headerH;
+        clipLayers[k].end = Math.max(clipLayers[k].start + 1, top + h - headerH - stageH);
+      });
+      // La imagen de una parada cubre desde el final del clip anterior hasta el
+      // inicio del siguiente.
+      stopLayers.forEach((s, i) => {
+        s.start = i === 0 ? -1e9 : clipLayers[i - 1].end;
+        s.end = i === N - 1 ? 1e9 : clipLayers[i].start;
+      });
+      stopEls.forEach((s, i) => {
+        stopTops[i] = docTop(s);
+        stopHeights[i] = s.getBoundingClientRect().height;
+      });
+      read();
+      kick();
+    }
+
+    function jumpTo(i: number) {
+      const y = stopTops[i] - headerH;
+      window.scrollTo({ top: y, behavior: reduce ? 'auto' : 'smooth' });
+    }
+
+    // ---- imágenes de parada: solo la primera viene con src en el HTML (es el
+    // LCP). Las demás se hidratan desde data-src cuando van a hacer falta: la 1
+    // con el clip 1 o el primer scroll, las siguientes un tramo antes (gapIO) o,
+    // como red de seguridad, en cuanto read() les da opacidad.
+    const hydrated = stills.map((img) => img.hasAttribute('src'));
+    function hydrateStill(i: number) {
+      if (i < 0 || i >= N || hydrated[i]) return;
+      hydrated[i] = true;
+      const img = stills[i];
+      const { srcset, src } = img.dataset;
+      if (srcset) img.srcset = srcset;
+      if (src) img.src = src;
+    }
+    if (noVideo) stills.forEach((_, i) => hydrateStill(i));
+
+    // ---- clips: carga progresiva por URL (preload=auto). El vídeo sirve con
+    // los primeros cientos de KB (canplay), no al último byte; la caché HTTP
+    // cubre las vueltas al inicio con View Transitions.
+    function loadClip(l: Layer | undefined) {
+      if (!l || noVideo || l.loading || !l.src || destroyed) return;
+      l.loading = true;
+      const v = document.createElement('video');
+      v.muted = true;
+      v.playsInline = true;
+      v.preload = 'auto';
+      v.setAttribute('muted', '');
+      v.setAttribute('playsinline', '');
+      v.setAttribute('aria-hidden', 'true');
+      const onReady = () => {
+        if (l.ready || destroyed) return;
+        l.ready = true;
+        if (l === clipLayers[0]) {
+          setLoading(false);
+          hydrateStill(1);
+        }
+        read();
+        kick();
+      };
+      v.addEventListener('canplay', onReady, { once: true });
+      v.addEventListener('loadeddata', () => {
+        try {
+          v.pause();
+        } catch {
+          /* noop */
+        }
+        if (userReady) prime(v);
+      });
+      v.addEventListener('error', () => {
+        // Sin vídeo en este tramo: queda el fundido entre las dos imágenes.
+        l.ready = false;
+        l.video = undefined;
+        v.remove();
+      });
+      v.src = l.src;
+      l.el.appendChild(v);
+      l.video = v;
+    }
+
+    // Clip 1: al primer scroll o, si el visitante no se mueve, cuando la página
+    // ya cargó y el hilo está libre (no compite con el LCP).
+    let firstTimer = 0;
+    function requestFirstClip() {
+      if (destroyed) return;
+      clearTimeout(firstTimer);
+      loadClip(clipLayers[0]);
+      hydrateStill(1);
+    }
+    function scheduleFirstClip() {
+      const idle = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number })
+        .requestIdleCallback;
+      const go = () => (idle ? idle(requestFirstClip, { timeout: 2000 }) : requestFirstClip());
+      if (document.readyState === 'complete') firstTimer = window.setTimeout(go, 800);
+      else window.addEventListener('load', () => (firstTimer = window.setTimeout(go, 800)), sig);
+    }
+
+    // Pista "cargando": si el visitante ya hizo scroll hacia el primer tramo y el
+    // clip 1 aún no está listo, se muestra tras 350 ms (evita parpadeos) y se
+    // oculta en cuanto el vídeo responde. Sin vídeo no aparece nunca.
+    let loadingTimer = 0;
+    let loadingShown = false;
+    function setLoading(on: boolean) {
+      if (!loading || noVideo) return;
+      clearTimeout(loadingTimer);
+      if (on && !loadingShown) {
+        loadingTimer = window.setTimeout(() => {
+          if (clipLayers[0]?.ready || destroyed) return;
+          loadingShown = true;
+          loading.hidden = false;
+          requestAnimationFrame(() => loading.classList.add('is-visible'));
+        }, 350);
+      } else if (!on && loadingShown) {
+        loadingShown = false;
+        loading.classList.remove('is-visible');
+        loadingTimer = window.setTimeout(() => (loading.hidden = true), 320);
+      }
+    }
+    let scrolledOnce = false;
+
+    function lerpFocus(a: string, b: string, t: number) {
+      const pa = a.split(/\s+/).map(parseFloat);
+      const pb = b.split(/\s+/).map(parseFloat);
+      const x = pa[0] + (pb[0] - pa[0]) * t;
+      const y = pa[1] + (pb[1] - pa[1]) * t;
+      return `${x.toFixed(1)}% ${y.toFixed(1)}%`;
+    }
+
+    // La luz del cristal se escribe en el panel activo (no en todo el film),
+    // cuantizada a 1/50 y solo cuando cambia: sin recálculo de estilo por frame.
+    let shiftEl: HTMLElement | null = null;
+    let lastShift = NaN;
+
+    function read() {
+      const y = window.scrollY || window.pageYOffset;
+      if (!scrolledOnce && y > 8) {
+        scrolledOnce = true;
+        requestFirstClip();
+        if (!clipLayers[0]?.ready) setLoading(true);
+      }
+
+      let ci = 0;
+      layers.forEach((l, i) => {
+        if (y >= l.start) ci = i;
+      });
+      layers.forEach((l, i) => {
+        const local = clamp((y - l.start) / Math.max(1, l.end - l.start));
+        l.target = local;
+        let outside = 0;
+        if (y < l.start) outside = l.start - y;
+        else if (y > l.end) outside = y - l.end;
+        const op = smooth(1 - outside / fadePx);
+        if (op > 0) {
+          // Red de seguridad (saltos del riel, carga con #ancla): lo que se ve, se carga.
+          if (l.src) loadClip(l);
+          else if (l.still !== undefined) hydrateStill(l.still);
+        }
+        const show = l.src ? (l.ready ? op : 0) : op;
+        l.el.style.opacity = show.toFixed(3);
+        l.visible = show > 0.001;
+        l.el.style.zIndex = i === ci ? '20' : String(10 + Math.round(op * 5));
+        if (l.src && l.video && l.fromFocus && l.toFocus && isMobile()) {
+          l.video.style.objectPosition = lerpFocus(l.fromFocus, l.toFocus, local);
+        }
+      });
+
+      // Clip activo sin vídeo listo: fundir entre las imágenes vecinas.
+      const cur = layers[ci];
+      if (cur.src && !cur.ready) {
+        const p = clamp((y - cur.start) / Math.max(1, cur.end - cur.start));
+        const prev = layers[ci - 1];
+        const next = layers[ci + 1];
+        if (prev) {
+          prev.el.style.opacity = String(p < 0.5 ? 1 : smooth(1 - (p - 0.5) / 0.15));
+          prev.el.style.zIndex = p < 0.5 ? '21' : '19';
+        }
+        if (next) {
+          if (next.still !== undefined) hydrateStill(next.still);
+          next.el.style.opacity = String(p >= 0.5 ? 1 : smooth(1 - (0.5 - p) / 0.15));
+          next.el.style.zIndex = p >= 0.5 ? '21' : '19';
+        }
+      }
+
+      // Parada activa: la sección más cercana al centro de la pantalla (geometría cacheada).
+      const center = y + headerH + stageH / 2;
+      let near = 0;
+      let best = Infinity;
+      for (let i = 0; i < stopEls.length; i++) {
+        const top = stopTops[i];
+        const bottom = top + stopHeights[i];
+        const d = center < top ? top - center : center > bottom ? center - bottom : 0;
+        if (d < best) {
+          best = d;
+          near = i;
+        }
+      }
+      if (near !== active) {
+        active = near;
+        dots.forEach((d, k) => {
+          if (k === near) d.setAttribute('aria-current', 'step');
+          else d.removeAttribute('aria-current');
+        });
+      }
+
+      // La luz del cristal resbala suavemente con el scroll (-1..1 por pantalla).
+      const shift = Math.round((((y / Math.max(1, stageH)) % 2) - 1) * 50) / 50;
+      const panel = panels[near];
+      if (panel !== shiftEl) {
+        shiftEl = panel;
+        lastShift = NaN;
+      }
+      if (shiftEl && shift !== lastShift) {
+        lastShift = shift;
+        shiftEl.style.setProperty('--glass-shift', String(shift));
+      }
+
+      progress.style.transform = `scaleX(${clamp((y - trackTop) / Math.max(1, trackH - stageH))})`;
+      if (hint) hint.style.opacity = String(clamp(1 - y / (stageH * 0.4)));
+      ticking = false;
+    }
+
+    // rAF solo mientras haya un vídeo que acercar a su objetivo; en reposo, nada.
+    function raf() {
+      rafId = 0;
+      const eps = isMobile() ? 0.02 : 0.006;
+      let busy = false;
+      clipLayers.forEach((l) => {
+        const v = l.video;
+        if (!v || !l.ready) return;
+        if (v.seeking) {
+          busy = true;
+          return;
+        }
+        if (Math.abs(l.cur - l.target) < 0.002) return;
+        busy = true;
+        l.cur += (l.target - l.cur) * (reduce ? 1 : 0.22);
+        if (!l.visible) l.cur = l.target; // fuera de pantalla no hace falta suavizar
+        const dur = v.duration || 1;
+        const t = clamp(l.cur, 0, 0.999) * dur;
+        if (Math.abs(v.currentTime - t) > eps) {
+          try {
+            v.currentTime = t;
+          } catch {
+            /* noop */
+          }
+        }
+      });
+      if (busy && filmVisible && !destroyed) rafId = requestAnimationFrame(raf);
+    }
+    function kick() {
+      if (!rafId && filmVisible && !destroyed) rafId = requestAnimationFrame(raf);
+    }
+
+    // iOS necesita un gesto antes de pintar un vídeo silenciado: play→pause.
+    let userReady = false;
+    function prime(v: HTMLVideoElement) {
+      if (!isMobile()) return;
+      try {
+        const p = v.play();
+        if (p && p.then) p.then(() => v.pause()).catch(() => {});
+      } catch {
+        /* noop */
+      }
+    }
+    function onFirstGesture() {
+      if (userReady) return;
+      userReady = true;
+      clipLayers.forEach((l) => l.video && prime(l.video));
+    }
+    window.addEventListener('pointerdown', onFirstGesture, { ...sig, once: true });
+    window.addEventListener('touchstart', onFirstGesture, { ...sig, once: true });
+
+    // Aparición de los paneles al entrar en pantalla; carga anticipada por tramo;
+    // el film entero fuera de pantalla apaga scroll y rAF.
+    let io: IntersectionObserver | undefined;
+    let gapIO: IntersectionObserver | undefined;
+    let rootIO: IntersectionObserver | undefined;
+    let ro: ResizeObserver | undefined;
+    if ('IntersectionObserver' in window) {
+      io = new IntersectionObserver(
+        (entries) => entries.forEach((e) => e.isIntersecting && e.target.classList.add('is-in')),
+        { rootMargin: '0px 0px -12% 0px', threshold: 0.08 },
+      );
+      stopEls.forEach((s) => io!.observe(s));
+
+      // Tramo g a la vista (o a un 10 % de pantalla): su clip y la imagen a la que
+      // lleva ya deberían estar; el clip y la imagen siguientes empiezan a bajar.
+      gapIO = new IntersectionObserver(
+        (entries) =>
+          entries.forEach((e) => {
+            if (!e.isIntersecting) return;
+            const g = gapEls.indexOf(e.target as HTMLElement);
+            if (g < 0) return;
+            requestFirstClip();
+            loadClip(clipLayers[g]);
+            hydrateStill(g + 1);
+            loadClip(clipLayers[g + 1]);
+            hydrateStill(g + 2);
+          }),
+        { rootMargin: '0px 0px 10% 0px', threshold: 0 },
+      );
+      gapEls.forEach((g) => gapIO!.observe(g));
+
+      rootIO = new IntersectionObserver(
+        (entries) => {
+          const e = entries[entries.length - 1];
+          filmVisible = e.isIntersecting;
+          if (filmVisible) {
+            read();
+            kick();
+          } else if (rafId) {
+            cancelAnimationFrame(rafId);
+            rafId = 0;
+          }
+        },
+        { threshold: 0 },
+      );
+      rootIO.observe(root);
+    } else {
+      stopEls.forEach((s) => s.classList.add('is-in'));
+    }
+
+    // Foco por teclado dentro de una parada: el panel se revela sin esperar al scroll.
+    root.addEventListener(
+      'focusin',
+      (e) => {
+        const stop = (e.target as Element).closest('.film__stop');
+        stop?.classList.add('is-in');
+      },
+      { signal: ac.signal },
+    );
+
+    dots.forEach((d, i) => d.addEventListener('click', () => jumpTo(i), { signal: ac.signal }));
+
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!filmVisible) return;
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(read);
+        }
+        kick();
+      },
+      sig,
+    );
+    window.addEventListener(
+      'resize',
+      () => {
+        if (coarse && window.innerWidth === laidOutW) return;
+        layout();
+      },
+      sig,
+    );
+    window.addEventListener('orientationchange', layout, sig);
+    window.addEventListener('load', layout, sig);
+    // El contenido slotteado puede cambiar de altura al cargar imágenes.
+    if ('ResizeObserver' in window) {
+      ro = new ResizeObserver(() => layout());
+      ro.observe(root);
+    }
+
+    layout();
+    if (!noVideo) scheduleFirstClip();
+
+    return () => {
+      destroyed = true;
+      ac.abort();
+      cancelAnimationFrame(rafId);
+      rafId = 0;
+      io?.disconnect();
+      gapIO?.disconnect();
+      rootIO?.disconnect();
+      ro?.disconnect();
+      clearTimeout(loadingTimer);
+      clearTimeout(firstTimer);
+      clipLayers.forEach((l) => {
+        if (l.video) {
+          l.video.removeAttribute('src');
+          l.video.load();
+          l.video.remove();
+          l.video = undefined;
+        }
+      });
+    };
+  }
+</script>

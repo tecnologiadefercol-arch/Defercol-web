@@ -1,0 +1,133 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import WhatsAppButton from '../components/WhatsAppButton.astro';
+import { ClientRouter } from 'astro:transitions';
+import { site, contactIsPlaceholder } from '../data/site';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  noindex?: boolean;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+}
+
+const {
+  title,
+  description = site.description,
+  image = '/og-default.png',
+  noindex = false,
+  jsonLd,
+} = Astro.props;
+
+const base = Astro.site ?? new URL(site.url);
+const canonical = new URL(Astro.url.pathname, base);
+const ogImage = new URL(image, base);
+const fullTitle = title === site.name ? `${site.name} | ${site.tagline}` : `${title} | ${site.name}`;
+
+const organization = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: site.name,
+  legalName: site.legalName,
+  url: site.url,
+  logo: new URL('/favicon.svg', base).toString(),
+  telephone: site.phone,
+  email: site.email,
+  ...(contactIsPlaceholder
+    ? {}
+    : {
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: site.address.street,
+          addressLocality: site.address.city,
+          addressRegion: site.address.region,
+          addressCountry: site.address.country,
+        },
+      }),
+};
+
+const schemas = [organization, ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [])];
+---
+
+<!doctype html>
+<html lang="es-CO">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <!-- Color de la barra del navegador según el esquema del sistema (sistema de diseño, bloque C). -->
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#08111f" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    {
+      site.googleSiteVerification && (
+        <meta name="google-site-verification" content={site.googleSiteVerification} />
+      )
+    }
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:locale" content="es_CO" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(schemas)} />
+    <!-- Precargas y metadatos propios de cada página (p. ej. la primera imagen del film). -->
+    <slot name="head" />
+    <!--
+      Marca <html> antes del primer pintado:
+      - clase "js": el CSS puede ocultar lo que solo tiene sentido con JavaScript.
+      - clase "perf-lite" y data-perf="lite": en equipos modestos (poca memoria,
+        pocos núcleos, puntero grueso o ahorro de datos) se reduce el desenfoque
+        del cristal y se apagan los backdrop-filter secundarios.
+      Va inline y con data-astro-rerun porque el ClientRouter reescribe los
+      atributos de <html> en cada navegación. Forzar para pruebas: ?perf=lite | ?perf=full
+    -->
+    <script is:inline data-astro-rerun>
+      (function () {
+        var d = document.documentElement;
+        var n = navigator;
+        var q = new URLSearchParams(location.search).get('perf');
+        var lite =
+          q === 'lite' ||
+          (q !== 'full' &&
+            ((n.deviceMemory && n.deviceMemory <= 4) ||
+              (n.hardwareConcurrency && n.hardwareConcurrency <= 4) ||
+              matchMedia('(hover: none) and (pointer: coarse)').matches ||
+              (n.connection && n.connection.saveData)));
+        d.classList.add('js');
+        d.classList.toggle('perf-lite', !!lite);
+        d.dataset.perf = lite ? 'lite' : 'full';
+      })();
+    </script>
+    <!-- Navegación sin recarga entre páginas: fundido del contenido, cabecera y WhatsApp persistentes. -->
+    <ClientRouter />
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">Ir al contenido</a>
+    <!--
+      Con el ClientRouter, la cabecera persiste entre páginas (transition:persist
+      en Header.astro: mismo nodo DOM, menú y listeners intactos) y <main> se funde.
+      El botón de WhatsApp se vuelve a crear en cada página a propósito: su script
+      decide por página cuándo ceder ante otros accesos a WhatsApp.
+    -->
+    <Header />
+    <main id="contenido">
+      <slot />
+    </main>
+    <Footer />
+    <WhatsAppButton />
+  </body>
+</html>

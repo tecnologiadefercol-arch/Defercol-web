@@ -1,0 +1,428 @@
+---
+import { existsSync, statSync } from 'node:fs';
+import Layout from '../layouts/Layout.astro';
+import { getImage } from 'astro:assets';
+import heroStill from '../assets/film/stop-3@2x.webp';
+import { site, categories, whatsappLink } from '../data/site';
+
+// El PDF se sirve desde public/; en tiempo de construcción comprobamos si ya
+// existe para mostrar su peso real y, si no, ofrecerlo por WhatsApp sin enlaces rotos.
+const pdfFile = new URL(`../../public${site.catalogPath}`, import.meta.url);
+const pdfExists = existsSync(pdfFile);
+const pdfBytes = pdfExists ? statSync(pdfFile).size : 0;
+const pdfSize =
+  pdfBytes >= 1048576
+    ? `${(pdfBytes / 1048576).toFixed(1).replace('.', ',')} MB`
+    : `${Math.max(1, Math.round(pdfBytes / 1024))} KB`;
+
+// Portada real del PDF (primera página exportada a imagen). Mientras no exista,
+// se dibuja una portada con los datos del sitio.
+const coverPath = '/catalogo/portada.webp';
+const coverExists = existsSync(new URL(`../../public${coverPath}`, import.meta.url));
+
+const year = new Date().getFullYear();
+const meta = ['PDF', 'Referencias por marca y categoría', pdfExists ? pdfSize : ''].filter(Boolean);
+
+// Hero: cuadro de una parada del brand film; astro:assets genera las anchuras
+// intermedias para que un móvil no reciba el cuadro completo de 1920 px.
+const hero = await getImage({
+  src: heroStill,
+  width: 1920,
+  widths: [640, 960, 1280, 1920, 2560, 3840],
+  sizes: '100vw',
+  format: 'webp',
+  quality: 70,
+});
+
+---
+
+<Layout
+  title="Catálogo PDF"
+  description="Descarga el catálogo de productos de Defercol en PDF: racores, válvulas, tubería, reguladores e instrumentación industrial."
+>
+  <section class="page-hero page-hero--image">
+    <!-- Escena de tubería del brand film (parada 3), en 1x y 2x para pantallas retina. -->
+    <img
+      class="page-hero__img"
+      src={hero.src}
+      srcset={hero.srcSet.attribute}
+      sizes="100vw"
+      alt=""
+      width="1920"
+      height="1080"
+      fetchpriority="high"
+      decoding="async"
+      style="object-position: 50% 50%"
+    />
+    <div class="container">
+      <span class="eyebrow">Catálogo</span>
+      <h1>Todo el catálogo en un PDF.</h1>
+      <p>Todas las líneas en un documento, listo para compartir con compras o mantenimiento.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container download">
+      <figure class="doc" role="img" aria-label={`Vista previa de la portada del catálogo Defercol ${year}`}>
+        {
+          coverExists ? (
+            <img class="doc__image" src={coverPath} alt="" width="1240" height="1754" loading="lazy" decoding="async" />
+          ) : (
+            <div class="doc__page" aria-hidden="true">
+              <div class="doc__band">
+                <img
+                  class="doc__photo"
+                  src={hero.src}
+                  srcset={hero.srcSet.attribute}
+                  sizes="(max-width: 900px) 90vw, 420px"
+                  alt=""
+                  width="1920"
+                  height="1080"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <div class="doc__brand">
+                  <span class="doc__mark">D</span>
+                  <span>Defercol</span>
+                </div>
+                <div class="doc__title">
+                  <span class="doc__kicker">Catálogo de productos</span>
+                  <strong>{year}</strong>
+                </div>
+              </div>
+              <ul class="doc__lines">
+                {
+                  categories.map((c, i) => (
+                    <li>
+                      <span class="doc__num">0{i + 1}</span>
+                      <span>{c.name}</span>
+                    </li>
+                  ))
+                }
+              </ul>
+              <div class="doc__foot">
+                <span>{site.url.replace(/^https?:\/\//, '')}</span>
+                <span>{site.phone}</span>
+              </div>
+            </div>
+          )
+        }
+        <figcaption class="doc__caption">Portada · Catálogo {year}</figcaption>
+      </figure>
+
+      <!--
+        Tarjeta y ayuda son hijos directos de la rejilla (áreas): en escritorio
+        van a la derecha de la portada; en móvil la tarjeta de descarga sube
+        antes que la portada para que la acción quede dentro del pliegue.
+      -->
+      <div class="card download__card">
+        <h2>Catálogo Defercol</h2>
+        <p class="download__meta">
+          {meta.map((m, i) => (
+            <>
+              {i > 0 && <span class="download__dot" aria-hidden="true">·</span>}
+              <span>{m}</span>
+            </>
+          ))}
+        </p>
+        <div class="download__actions">
+          {
+            pdfExists ? (
+              <a class="btn btn-primary" href={site.catalogPath} download>
+                Descargar PDF
+              </a>
+            ) : (
+              <a
+                class="btn btn-whatsapp"
+                href={whatsappLink('Hola Defercol, quiero recibir el catálogo en PDF.')}
+                target="_blank"
+                rel="noopener"
+              >
+                Pedir el PDF por WhatsApp
+              </a>
+            )
+          }
+          <a class="btn btn-ghost" href="/productos">Ver en la web</a>
+        </div>
+        {!pdfExists && <p class="download__note muted">El PDF está en preparación. Te lo enviamos por WhatsApp.</p>}
+      </div>
+
+      <div class="download__help">
+        <h3>¿No está tu referencia?</h3>
+        <p class="muted">Manejamos muchas más de las que aparecen aquí. Escríbenos y la conseguimos.</p>
+        <a
+          class="btn btn-whatsapp btn-sm"
+          href={whatsappLink('Hola Defercol, busco una referencia que no está en el catálogo: ')}
+          target="_blank"
+          rel="noopener"
+        >
+          Consultar por WhatsApp
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .download {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    grid-template-areas:
+      'doc card'
+      'doc help';
+    /* La portada (más alta) ocupa las dos filas; la segunda absorbe el sobrante
+       para que la ayuda quede pegada a la tarjeta y no a media altura. */
+    grid-template-rows: auto 1fr;
+    gap: var(--space-5, 24px) var(--space-8, 48px);
+    align-items: start;
+    align-content: start;
+  }
+
+  /* ---- vista previa del documento ---- */
+  .doc {
+    grid-area: doc;
+    margin: 0;
+    width: 100%;
+    max-width: 420px;
+    justify-self: center;
+    /* Las unidades cqw de la portada se miden contra este contenedor. */
+    container-type: inline-size;
+  }
+
+  .doc__image,
+  .doc__page {
+    width: 100%;
+    aspect-ratio: 1 / 1.414;
+    border-radius: var(--radius-xl, 24px);
+    box-shadow: var(--shadow-2, var(--shadow-lg));
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+  }
+
+  .doc__image {
+    object-fit: cover;
+    object-position: top;
+    height: auto;
+  }
+
+  .doc__page {
+    position: relative;
+    display: grid;
+    grid-template-rows: 52% 1fr auto;
+    background: var(--color-surface-raised, #fff);
+    color: var(--color-text);
+    /* Escala tipográfica relativa al ancho de la página (420 px → 11 px). */
+    font-size: clamp(9px, 2.6cqw, 13px);
+  }
+
+  .doc__band {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    padding: 7% 8%;
+    color: #fff;
+    overflow: hidden;
+  }
+
+  .doc__photo {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 50%;
+  }
+
+  .doc__band::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(180deg, rgba(7, 26, 51, 0.35) 0%, rgba(7, 26, 51, 0.85) 100%),
+      linear-gradient(90deg, rgba(7, 26, 51, 0.55) 0%, rgba(7, 26, 51, 0.1) 100%);
+  }
+
+  .doc__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    font-weight: 800;
+    font-size: 1.3em;
+    letter-spacing: -0.01em;
+  }
+
+  .doc__mark {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 1.8em;
+    height: 1.8em;
+    border-radius: 0.45em;
+    background: var(--color-primary);
+    font-size: 1em;
+  }
+
+  .doc__mark::after {
+    content: '';
+    position: absolute;
+    top: 0.25em;
+    right: 0.25em;
+    width: 0.32em;
+    height: 0.32em;
+    border-radius: 50%;
+    background: var(--color-accent);
+  }
+
+  .doc__title {
+    align-self: end;
+    display: grid;
+    gap: 0.2em;
+  }
+
+  .doc__kicker {
+    font-size: 0.95em;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.82);
+  }
+
+  .doc__title strong {
+    font-size: 3.4em;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .doc__lines {
+    list-style: none;
+    margin: 0;
+    padding: 6% 8% 4%;
+    display: grid;
+    align-content: start;
+    gap: 0.55em;
+  }
+
+  .doc__lines li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.8em;
+    padding-bottom: 0.5em;
+    border-bottom: 1px solid var(--color-border);
+    font-weight: 600;
+    font-size: 1.05em;
+    color: var(--color-heading, var(--color-primary));
+  }
+
+  .doc__num {
+    font-family: var(--font-mono, ui-monospace, Menlo, monospace);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.8em;
+    font-weight: 500;
+    color: var(--color-accent-text, #b8520a);
+  }
+
+  .doc__foot {
+    display: flex;
+    justify-content: space-between;
+    gap: 1em;
+    padding: 0 8% 6%;
+    font-size: 0.85em;
+    color: var(--color-text-2, var(--color-muted));
+  }
+
+  .doc__caption {
+    margin-top: var(--space-3, 12px);
+    text-align: center;
+    font-size: var(--text-sm, 0.85rem);
+    color: var(--color-text-2, var(--color-muted));
+  }
+
+  /* ---- columna de descarga ---- */
+  .download__card {
+    grid-area: card;
+  }
+
+  .download__help {
+    grid-area: help;
+  }
+
+  .download__card h2 {
+    font-size: var(--text-2xl, 1.5rem);
+    letter-spacing: var(--tracking-snug, -0.014em);
+    margin-bottom: var(--space-1, 4px);
+  }
+
+  .download__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-2, 8px);
+    margin-bottom: var(--space-5, 24px);
+    font-size: var(--text-sm, 0.9rem);
+    color: var(--color-text-2, var(--color-muted));
+    font-variant-numeric: tabular-nums;
+  }
+
+  .download__dot {
+    color: var(--color-border-strong, var(--color-border));
+  }
+
+  .download__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3, 12px);
+  }
+
+  .download__note {
+    margin: var(--space-4, 16px) 0 0;
+    font-size: var(--text-sm, 0.9rem);
+  }
+
+  .download__help {
+    padding: var(--card-pad, 24px);
+    background: var(--color-surface);
+    border-radius: var(--radius-lg, 16px);
+  }
+
+  .download__help h3 {
+    font-size: var(--text-xl, 1.2rem);
+    letter-spacing: var(--tracking-snug, -0.01em);
+    text-wrap: balance;
+    margin-bottom: var(--space-2, 8px);
+  }
+
+  .download__help p {
+    margin-bottom: var(--space-4, 16px);
+  }
+
+  @media (max-width: 860px) {
+    .download {
+      grid-template-columns: 1fr;
+      /* La acción de descarga primero: entra en el pliegue del móvil. */
+      grid-template-areas:
+        'card'
+        'doc'
+        'help';
+      grid-template-rows: none;
+      gap: var(--space-6, 32px);
+    }
+
+    .doc {
+      max-width: 320px;
+    }
+
+    .doc__image,
+    .doc__page {
+      border-radius: 20px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .download__actions .btn {
+      flex: 1 1 100%;
+    }
+  }
+</style>

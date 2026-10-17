@@ -1,0 +1,425 @@
+---
+import { nav, whatsappLink } from '../data/site';
+
+const current = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (href: string) => (href === '/' ? current === '/' : current.startsWith(href));
+---
+
+<!--
+  El header persiste entre páginas con View Transitions (transition:persist):
+  el nodo DOM es siempre el mismo y el script lo re-sincroniza en astro:page-load.
+  Sin ClientRouter el atributo no hace nada y el flujo es el de siempre.
+-->
+<header class="site-header glass--thin" transition:persist="site-header">
+  <div class="container header-inner">
+    <!-- Sin aria-label: el nombre accesible sale del texto visible (Lighthouse label-content-name-mismatch). -->
+    <a href="/" class="brand">
+      <span class="brand-mark" aria-hidden="true">D</span>
+      <span class="brand-name">Defercol</span><span class="visually-hidden">, ir al inicio</span>
+    </a>
+
+    <button
+      class="nav-toggle"
+      type="button"
+      aria-expanded="false"
+      aria-controls="nav-principal"
+      aria-label="Abrir menú"
+    >
+      <span></span><span></span><span></span>
+    </button>
+
+    <nav id="nav-principal" class="nav" aria-label="Principal">
+      <ul>
+        {
+          nav.map((item) => (
+            <li>
+              <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <a class="btn btn-primary btn-sm" href={whatsappLink()} target="_blank" rel="noopener">
+        Cotizar
+      </a>
+    </nav>
+
+    <!-- Velo del menú móvil: cierra al tocar fuera. -->
+    <div class="nav-scrim" aria-hidden="true"></div>
+  </div>
+</header>
+
+<script>
+  /**
+   * Menú y enlace activo. Idempotente: los listeners se enlazan una sola vez
+   * (data-bound) y en cada astro:page-load se recalcula el aria-current según
+   * la URL (el HTML persistido trae el de la primera página) y se cierra el
+   * menú móvil. Se llama de inmediato por si no hay ClientRouter.
+   */
+  /** Lo que queda bajo el velo del menú móvil: inerte mientras el menú está abierto (atrapa el foco). */
+  const BEHIND_MENU = 'main, footer, .wa-aside';
+  const setInert = (on: boolean) =>
+    document.querySelectorAll<HTMLElement>(BEHIND_MENU).forEach((el) => el.toggleAttribute('inert', on));
+
+  /**
+   * Header oscuro sobre fondos oscuros: observa el film del inicio y el pie
+   * (ambos .theme-dark) en la franja que ocupa el header y, cuando uno la
+   * toca, el header adopta el alcance oscuro con una transición de 200 ms.
+   * El observador se rehace en cada navegación (los objetivos cambian) y al
+   * cambiar el tamaño de la ventana (rootMargin es fijo en píxeles).
+   */
+  let darkIO: IntersectionObserver | null = null;
+  let darkResizeTimer = 0;
+  function watchDark(header: HTMLElement) {
+    darkIO?.disconnect();
+    darkIO = null;
+    const targets = Array.from(document.querySelectorAll<HTMLElement>('.film, .site-footer'));
+    const setDark = (dark: boolean) => {
+      header.classList.toggle('on-dark', dark);
+      header.classList.toggle('theme-dark', dark);
+    };
+    if (!targets.length || !('IntersectionObserver' in window)) {
+      setDark(false);
+      return;
+    }
+    const headerH = header.getBoundingClientRect().height || 72;
+    const touching = new Set<Element>();
+    darkIO = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => (e.isIntersecting ? touching.add(e.target) : touching.delete(e.target)));
+        setDark(touching.size > 0);
+      },
+      { rootMargin: `0px 0px ${-Math.max(0, window.innerHeight - headerH)}px 0px`, threshold: 0 },
+    );
+    targets.forEach((t) => darkIO!.observe(t));
+  }
+
+  function initHeader() {
+    const header = document.querySelector<HTMLElement>('.site-header');
+    if (!header) return;
+    const toggle = header.querySelector<HTMLButtonElement>('.nav-toggle');
+    const nav = header.querySelector<HTMLElement>('#nav-principal');
+    const scrim = header.querySelector<HTMLElement>('.nav-scrim');
+
+    const isOpen = () => toggle?.getAttribute('aria-expanded') === 'true';
+
+    const setOpen = (open: boolean, focus = true) => {
+      if (!toggle || !nav) return;
+      const wasOpen = isOpen();
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+      nav.classList.toggle('is-open', open);
+      header.classList.toggle('is-menu-open', open);
+      document.documentElement.classList.toggle('nav-locked', open);
+      setInert(open);
+      if (!focus) return;
+      if (open) nav.querySelector<HTMLElement>('a')?.focus({ preventScroll: true });
+      else if (wasOpen) toggle.focus({ preventScroll: true });
+    };
+
+    watchDark(header);
+
+    // Enlace activo según la URL actual.
+    const current = location.pathname.replace(/\/$/, '') || '/';
+    header.querySelectorAll<HTMLAnchorElement>('.nav a:not(.btn)').forEach((a) => {
+      const href = a.getAttribute('href') || '/';
+      const active = href === '/' ? current === '/' : current.startsWith(href);
+      if (active) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
+    });
+    setOpen(false, false);
+
+    if (!toggle || toggle.dataset.bound) return;
+    toggle.dataset.bound = '1';
+
+    toggle.addEventListener('click', () => setOpen(!isOpen()));
+    scrim?.addEventListener('click', () => setOpen(false));
+    nav?.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('a')) setOpen(false, false);
+    });
+    document.addEventListener('keydown', (e) => {
+      // Escape cierra y devuelve el foco al botón esté donde esté el foco.
+      if (e.key === 'Escape' && isOpen()) setOpen(false);
+    });
+    // Si el viewport crece a escritorio con el menú abierto, se cierra solo.
+    window.matchMedia('(min-width: 861px)').addEventListener('change', (e) => {
+      if (e.matches && isOpen()) setOpen(false, false);
+    });
+    window.addEventListener('resize', () => {
+      clearTimeout(darkResizeTimer);
+      darkResizeTimer = window.setTimeout(() => watchDark(header), 150);
+    });
+  }
+
+  initHeader();
+  document.addEventListener('astro:page-load', initHeader);
+  // Antes de cambiar de página: nada queda inerte y el observador suelta los nodos viejos.
+  document.addEventListener('astro:before-swap', () => {
+    setInert(false);
+    darkIO?.disconnect();
+    darkIO = null;
+  });
+</script>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-header);
+    border-width: 0 0 1px;
+    border-radius: 0;
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+
+  /*
+    Sobre fondos oscuros (el film del inicio, el pie) el header adopta el
+    alcance oscuro: el script añade .on-dark + .theme-dark (tokens completos)
+    cuando el film o el pie tocan la franja del header. En el inicio la regla
+    estática body:has(.film) lo deja oscuro desde el primer pintado, sin esperar
+    al script, porque el film arranca justo bajo el header.
+  */
+  /* En el inicio el fondo del documento es navy: lo que el header desenfoca en
+     la parte alta (antes del film) ya es oscuro y no hay gris en el primer pintado. */
+  :global(body:has(.film)) {
+    background: var(--navy-900);
+  }
+
+  .site-header.on-dark,
+  :global(body:has(.film)) .site-header {
+    color-scheme: dark;
+    --glass-thin-bg: rgba(7, 26, 51, 0.55);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-highlight: rgba(255, 255, 255, 0.14);
+    --color-heading: #f7f9fc;
+    --color-text: #e8edf4;
+    --color-text-2: #a3b0c0;
+    --color-border: rgba(255, 255, 255, 0.12);
+    --color-surface-raised: #16243a;
+    --color-primary-soft: rgba(159, 192, 239, 0.14);
+    --color-brand-fill: #ffffff;
+    --color-brand-fill-hover: #ffffff;
+    --color-on-brand: var(--navy-800);
+    --color-focus: #8ab4f8;
+    --shadow-rgb: 0 0 0;
+    --glass-fallback: rgba(7, 26, 51, 0.92);
+    color: var(--color-text);
+  }
+
+  .header-inner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+    min-height: var(--header-h);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    text-decoration: none;
+    font-weight: var(--weight-bold);
+    font-size: var(--text-xl);
+    letter-spacing: var(--tracking-snug);
+    color: var(--color-heading);
+    border-radius: var(--radius-sm);
+  }
+
+  .brand-mark {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    background: var(--color-brand-fill);
+    color: var(--color-on-brand);
+    font-size: 1.15rem;
+  }
+
+  .brand-mark::after {
+    content: '';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--color-accent);
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+  }
+
+  .nav ul {
+    display: flex;
+    gap: var(--space-5);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav a:not(.btn) {
+    display: inline-block;
+    padding: var(--space-2) 0;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-text);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 2px;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+  }
+
+  .nav a:not(.btn):hover,
+  .nav a[aria-current='page'] {
+    color: var(--color-heading);
+    border-color: var(--color-accent);
+  }
+
+  .nav-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 44px;
+    height: 44px;
+    padding: 0 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-raised);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .nav-toggle span {
+    display: block;
+    height: 2px;
+    background: var(--color-heading);
+    border-radius: 2px;
+    transition:
+      transform var(--dur-base) var(--ease-out-expo),
+      opacity var(--dur-fast) var(--ease-out);
+  }
+
+  .nav-toggle[aria-expanded='true'] span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .nav-toggle[aria-expanded='true'] span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .nav-toggle[aria-expanded='true'] span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  .nav-scrim {
+    display: none;
+  }
+
+  @media (max-width: 860px) {
+    .nav-toggle {
+      display: flex;
+    }
+
+    .nav {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 100%;
+      z-index: 1;
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--space-3);
+      padding: var(--space-4) var(--space-4) var(--space-5);
+      background: var(--color-surface-raised);
+      border: 1px solid var(--color-border);
+      border-top: 0;
+      border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+      box-shadow: var(--shadow-3);
+      opacity: 0;
+      transform: translateY(-8px);
+      visibility: hidden;
+      transition:
+        opacity var(--dur-base) var(--ease-out-expo),
+        transform var(--dur-slow) var(--ease-out-expo),
+        visibility 0s linear var(--dur-slow);
+    }
+
+    .nav.is-open {
+      opacity: 1;
+      transform: none;
+      visibility: visible;
+      transition-delay: 0s;
+    }
+
+    .nav ul {
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .nav a:not(.btn) {
+      display: block;
+      padding: var(--space-3);
+      font-size: var(--text-md);
+      border-bottom: 0;
+      border-radius: var(--radius-sm);
+    }
+
+    .nav a[aria-current='page'] {
+      background: var(--color-primary-soft);
+    }
+
+    /* En el menú móvil el CTA es un objetivo táctil completo (44 px), no btn-sm. */
+    .nav .btn {
+      margin-top: var(--space-2);
+      min-height: var(--control-h);
+      font-size: var(--text-md);
+    }
+
+    /* Velo: ocupa la pantalla bajo el header mientras el menú está abierto. */
+    .nav-scrim {
+      display: block;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 100%;
+      height: 100vh;
+      height: 100dvh;
+      z-index: 0;
+      background: rgb(var(--color-scrim) / 0.45);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--dur-base) var(--ease-out);
+    }
+
+    .is-menu-open .nav-scrim {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Bloqueo del scroll de fondo con el menú abierto. */
+    :global(html.nav-locked) {
+      overflow: hidden;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav,
+    .nav-scrim,
+    .nav-toggle span {
+      transition: none;
+    }
+  }
+</style>

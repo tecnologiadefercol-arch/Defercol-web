@@ -1,0 +1,670 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getImage } from 'astro:assets';
+import heroStill from '../assets/film/stop-2@2x.webp';
+import { site, whatsappLink, contactIsPlaceholder } from '../data/site';
+
+// Mapa: cuando exista el iframe de Google Business (Google Maps > Compartir >
+// Insertar un mapa), añadir una <section class="map"> después del formulario.
+// Mientras tanto no se renderiza nada para no mostrar un marcador vacío.
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  name: site.name,
+  url: site.url,
+  telephone: site.phone,
+  email: site.email,
+  ...(contactIsPlaceholder
+    ? {}
+    : {
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: site.address.street,
+          addressLocality: site.address.city,
+          addressRegion: site.address.region,
+          addressCountry: site.address.country,
+        },
+      }),
+  openingHours: 'Mo-Fr 08:00-17:30',
+};
+
+const phoneHref = `tel:${site.phone.replace(/\s+/g, '')}`;
+
+// Hero: cuadro de una parada del brand film; astro:assets genera las anchuras
+// intermedias para que un móvil no reciba el cuadro completo de 1920 px.
+const hero = await getImage({
+  src: heroStill,
+  width: 1920,
+  widths: [640, 960, 1280, 1920, 2560, 3840],
+  sizes: '100vw',
+  format: 'webp',
+  quality: 70,
+});
+
+---
+
+<Layout
+  title="Contacto"
+  description="Cotizaciones y asesoría técnica en racores, válvulas e instrumentación industrial. WhatsApp, teléfono y correo de Defercol."
+  jsonLd={jsonLd}
+>
+  <section class="page-hero page-hero--image">
+    <!-- Cuadro de una parada del brand film, en 1x y 2x para pantallas retina. -->
+    <img
+      class="page-hero__img"
+      src={hero.src}
+      srcset={hero.srcSet.attribute}
+      sizes="100vw"
+      alt=""
+      width="1920"
+      height="1080"
+      fetchpriority="high"
+      decoding="async"
+      style="object-position: 50% 50%"
+    />
+    <div class="container">
+      <span class="eyebrow">Contacto</span>
+      <h1>Cuéntanos qué necesitas.</h1>
+      <p>Cotizaciones y consultas técnicas en horario laboral. Por WhatsApp respondemos más rápido.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container contact">
+      <div class="contact__info">
+        <a class="card card--interactive contact-card contact-card--wa" href={whatsappLink()} target="_blank" rel="noopener">
+          <span class="contact-card__label">
+            <svg class="contact-card__icon" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+              <path
+                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.885-9.885 9.885m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"
+              ></path>
+            </svg>
+            WhatsApp
+          </span>
+          <strong>{site.phone}</strong>
+          <span class="muted">Cotizaciones en horario laboral</span>
+        </a>
+        <a class="card card--interactive contact-card" href={phoneHref}>
+          <span class="contact-card__label">Teléfono</span>
+          <strong>{site.phone}</strong>
+          <span class="muted">{site.hours}</span>
+        </a>
+        <a class="card card--interactive contact-card" href={`mailto:${site.email}`}>
+          <span class="contact-card__label">Correo</span>
+          <strong>{site.email}</strong>
+          <span class="muted">Para planos, listados y fichas</span>
+        </a>
+        {
+          !contactIsPlaceholder && (
+            <div class="card contact-card">
+              <span class="contact-card__label">Dirección</span>
+              <strong>{site.address.street}</strong>
+              <span class="muted">{site.address.city}, Colombia</span>
+            </div>
+          )
+        }
+      </div>
+
+      <div class="card contact__form">
+        <h2 id="form-title">Pide tu cotización.</h2>
+        <p class="contact__form-lead">Al enviar, se abre WhatsApp con tu mensaje listo.</p>
+
+        <!--
+          Sin JavaScript el formulario envía por GET a wa.me, que solo lee el
+          parámetro "text" (el textarea se llama así a propósito). Con JavaScript
+          se intercepta: validación en línea y mensaje completo con nombre,
+          empresa y datos de contacto.
+        -->
+        <form
+          id="contact-form"
+          action={`https://wa.me/${site.whatsapp}`}
+          method="get"
+          target="_blank"
+          aria-labelledby="form-title"
+        >
+          <div class="field field--float">
+            <input
+              id="nombre"
+              name="nombre"
+              type="text"
+              placeholder=" "
+              required
+              minlength="2"
+              maxlength="80"
+              autocomplete="name"
+              autocapitalize="words"
+              aria-describedby="nombre-err"
+            />
+            <label for="nombre">Nombre</label>
+            <p class="field__error" id="nombre-err" aria-live="polite"></p>
+          </div>
+
+          <div class="field field--float">
+            <input
+              id="empresa"
+              name="empresa"
+              type="text"
+              placeholder=" "
+              maxlength="80"
+              autocomplete="organization"
+              aria-describedby="empresa-err"
+            />
+            <label for="empresa">Empresa (opcional)</label>
+            <p class="field__error" id="empresa-err" aria-live="polite"></p>
+          </div>
+
+          <div class="field-row">
+            <div class="field field--float">
+              <input
+                id="correo"
+                name="correo"
+                type="email"
+                placeholder=" "
+                maxlength="120"
+                autocomplete="email"
+                inputmode="email"
+                autocapitalize="off"
+                spellcheck="false"
+                aria-describedby="correo-err"
+              />
+              <label for="correo">Correo (opcional)</label>
+              <p class="field__error" id="correo-err" aria-live="polite"></p>
+            </div>
+
+            <div class="field field--float">
+              <input
+                id="telefono"
+                name="telefono"
+                type="tel"
+                placeholder=" "
+                maxlength="24"
+                autocomplete="tel"
+                inputmode="tel"
+                aria-describedby="telefono-err"
+              />
+              <label for="telefono">Teléfono (opcional)</label>
+              <p class="field__error" id="telefono-err" aria-live="polite"></p>
+            </div>
+          </div>
+
+          <div class="field field--float">
+            <textarea
+              id="mensaje"
+              name="text"
+              placeholder=" "
+              rows="5"
+              required
+              minlength="10"
+              maxlength="1000"
+              autocomplete="off"
+              aria-describedby="mensaje-hint mensaje-err"></textarea>
+            <label for="mensaje">¿Qué necesitas?</label>
+            <p class="field__hint" id="mensaje-hint">Referencia, cantidad, presión, temperatura o fluido.</p>
+            <p class="field__error" id="mensaje-err" aria-live="polite"></p>
+          </div>
+
+          <!-- Solo con JavaScript: el texto exacto que se abrirá en WhatsApp. -->
+          <aside class="preview" aria-label="Vista previa del mensaje" hidden>
+            <span class="preview__label">Así llegará tu mensaje</span>
+            <pre class="preview__text" id="preview"></pre>
+          </aside>
+
+          <div class="form__actions">
+            <button type="submit" class="btn btn-whatsapp">Continuar en WhatsApp</button>
+          </div>
+
+          <p class="form__after" id="after-send" hidden>
+            Listo. Si WhatsApp no se abrió,
+            <button type="button" class="link-btn" id="copy-msg">copia el mensaje</button>
+            y envíalo al <a href={phoneHref}>{site.phone}</a> o a <a href={`mailto:${site.email}`}>{site.email}</a>.
+          </p>
+        </form>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  import { whatsappLink } from '../data/site';
+
+  type Control = HTMLInputElement | HTMLTextAreaElement;
+
+  const rules: Record<string, (v: string) => string> = {
+    nombre: (v) => (!v ? 'Escribe tu nombre.' : v.length < 2 ? 'El nombre es muy corto.' : ''),
+    correo: (v) =>
+      v && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)
+        ? 'Revisa el correo: debe verse como nombre@empresa.com.'
+        : '',
+    telefono: (v) =>
+      v && !/^\d{7,15}$/.test(v.replace(/[\s\-().+]/g, ''))
+        ? 'Revisa el teléfono: por ejemplo 300 123 4567.'
+        : '',
+    text: (v) =>
+      !v
+        ? 'Cuéntanos qué necesitas.'
+        : v.length < 10
+          ? 'Añade un poco más de detalle: referencia, cantidad o medida.'
+          : v.length > 1000
+            ? 'El mensaje es muy largo: resume en menos de 1 000 caracteres.'
+            : '',
+  };
+
+  function initContact() {
+    const form = document.getElementById('contact-form') as HTMLFormElement | null;
+    // Idempotente: con View Transitions este módulo corre una vez, pero
+    // astro:page-load se dispara en cada visita a la página.
+    if (!form || form.dataset.ready) return;
+    form.dataset.ready = '1';
+    // La validación nativa (globos del navegador) solo queda para el caso sin JS.
+    form.noValidate = true;
+
+    const control = (name: string) => form.elements.namedItem(name) as Control | null;
+    const preview = form.querySelector<HTMLElement>('.preview');
+    const previewText = document.getElementById('preview');
+    const after = document.getElementById('after-send');
+    const copyBtn = document.getElementById('copy-msg') as HTMLButtonElement | null;
+
+    const validate = (name: string): boolean => {
+      const el = control(name);
+      const rule = rules[name];
+      if (!el || !rule) return true;
+      const msg = rule(el.value.trim());
+      const field = el.closest<HTMLElement>('.field');
+      const err = field?.querySelector<HTMLElement>('.field__error');
+      field?.classList.toggle('is-invalid', !!msg);
+      if (msg) el.setAttribute('aria-invalid', 'true');
+      else el.removeAttribute('aria-invalid');
+      if (err) err.textContent = msg;
+      return !msg;
+    };
+
+    const value = (name: string) => control(name)?.value.trim() ?? '';
+
+    // El mensaje por partes. Un campo obligatorio vacío se representa como una
+    // pista ("tu nombre", "tu mensaje"): en la vista previa va en gris y nunca
+    // llega al mensaje real, que solo se compone después de validar.
+    type Part = string | { hint: string };
+    const parts = (): Part[] => {
+      const nombre = value('nombre');
+      const empresa = value('empresa');
+      const texto = value('text');
+      const contacto = [value('correo'), value('telefono')].filter(Boolean).join(' · ');
+      const out: Part[] = ['Hola Defercol, soy ', nombre || { hint: 'tu nombre' }];
+      if (empresa) out.push(` de ${empresa}`);
+      out.push('.\n\n', texto || { hint: 'tu mensaje' });
+      if (contacto) out.push(`\n\nContacto: ${contacto}`);
+      return out;
+    };
+
+    const compose = () =>
+      parts()
+        .map((p) => (typeof p === 'string' ? p : `[${p.hint}]`))
+        .join('');
+
+    const renderPreview = () => {
+      if (!previewText) return;
+      // Sin nada escrito, la tarjeta muestra una pista (CSS) en vez de un esqueleto.
+      const empty = !value('nombre') && !value('text') && !value('empresa') && !value('correo') && !value('telefono');
+      preview?.classList.toggle('is-empty', empty);
+      previewText.replaceChildren(
+        ...(empty
+          ? []
+          : parts().map((p) => {
+              if (typeof p === 'string') return document.createTextNode(p);
+              const hint = document.createElement('span');
+              hint.className = 'preview__hint';
+              hint.textContent = `[${p.hint}]`;
+              return hint;
+            })),
+      );
+    };
+
+    let timer = 0;
+    form.addEventListener('input', (e) => {
+      const el = e.target as Control;
+      // Nunca regañar mientras se escribe por primera vez; sí borrar el error al corregir.
+      if (el.closest('.field')?.classList.contains('is-invalid')) validate(el.name);
+      clearTimeout(timer);
+      timer = window.setTimeout(renderPreview, 150);
+    });
+
+    form.addEventListener('focusout', (e) => {
+      const el = e.target as Control;
+      if (!el.name || !(el.name in rules)) return;
+      // Validar al salir si ya hay valor o si el campo obligatorio fue tocado.
+      if (el.value || el.required) validate(el.name);
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const invalid = Object.keys(rules).filter((n) => !validate(n));
+      if (invalid.length) {
+        const first = control(invalid[0]);
+        if (first) {
+          const r = first.getBoundingClientRect();
+          if (r.top < 0 || r.bottom > window.innerHeight) first.scrollIntoView({ block: 'center' });
+          first.focus();
+        }
+        return;
+      }
+      const url = whatsappLink(compose());
+      const w = window.open(url, '_blank', 'noopener');
+      if (!w) location.href = url; // bloqueador de ventanas emergentes
+      if (after) after.hidden = false;
+    });
+
+    copyBtn?.addEventListener('click', async () => {
+      const label = copyBtn.textContent;
+      try {
+        await navigator.clipboard.writeText(compose());
+        copyBtn.textContent = 'mensaje copiado';
+      } catch {
+        copyBtn.textContent = 'no se pudo copiar';
+      }
+      window.setTimeout(() => (copyBtn.textContent = label), 2000);
+    });
+
+    // ?ref=SKU desde el detalle de producto: deja el mensaje empezado.
+    const ref = new URLSearchParams(location.search).get('ref');
+    const text = control('text');
+    if (ref && text && !text.value) text.value = `Referencia: ${ref}\nCantidad: `;
+
+    if (preview) preview.hidden = false;
+    renderPreview();
+  }
+
+  initContact();
+  document.addEventListener('astro:page-load', initContact);
+</script>
+
+<style>
+  .contact {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: var(--space-7, 40px);
+    align-items: start;
+  }
+
+  .contact__info {
+    display: grid;
+    gap: var(--space-4, 16px);
+  }
+
+  /* ---- tarjetas de contacto ---- */
+  /* La elevación y la compresión al pulsar las pone .card--interactive (global). */
+  .contact-card {
+    display: grid;
+    gap: 2px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  a.contact-card:hover {
+    border-color: var(--color-accent);
+  }
+
+  /* WhatsApp: tinte suave y el icono en la etiqueta; sin contorno verde permanente
+     (se leía como anillo de foco). */
+  .contact-card--wa {
+    background: color-mix(in srgb, var(--color-whatsapp) 8%, var(--color-surface-raised, #fff));
+  }
+
+  .contact-card__label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2, 8px);
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 700;
+    letter-spacing: var(--tracking-caps, 0.1em);
+    text-transform: uppercase;
+    color: var(--color-accent-text, #b8520a);
+  }
+
+  .contact-card__icon {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    color: var(--color-whatsapp, #25d366);
+  }
+
+  .contact-card strong {
+    font-size: var(--text-lg, 1.1rem);
+    font-weight: 600;
+    color: var(--color-heading, var(--color-primary));
+    overflow-wrap: anywhere;
+  }
+
+  .contact-card .muted {
+    font-size: var(--text-sm, 0.9rem);
+  }
+
+  /* ---- formulario ---- */
+  .contact__form {
+    padding: var(--card-pad, 24px);
+  }
+
+  .contact__form h2 {
+    font-size: var(--text-2xl, 1.5rem);
+    letter-spacing: var(--tracking-snug, -0.014em);
+    line-height: var(--leading-snug, 1.15);
+    text-wrap: balance;
+    margin-bottom: var(--space-2, 8px);
+  }
+
+  .contact__form-lead {
+    color: var(--color-text-2, var(--color-muted));
+    margin-bottom: var(--space-5, 24px);
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 var(--space-3, 12px);
+    /* Un error de dos líneas en Correo no estira el campo Teléfono vecino. */
+    align-items: start;
+  }
+
+  /* ---- campo con etiqueta flotante (CSS puro) ---- */
+  .field {
+    position: relative;
+    display: grid;
+    align-content: start;
+    gap: var(--space-1, 4px);
+    margin-bottom: var(--space-4, 16px);
+  }
+
+  .field input,
+  .field textarea {
+    width: 100%;
+    min-height: 56px;
+    padding: 24px 16px 8px;
+    font: inherit;
+    font-size: 16px; /* evita el zoom automático de iOS al enfocar */
+    line-height: 1.3;
+    color: var(--color-text);
+    background: var(--color-surface-raised, #fff);
+    border: 1px solid var(--color-border-strong, #c5cdd6);
+    border-radius: var(--radius-md, 12px);
+    transition:
+      border-color var(--dur-fast, 0.2s) ease,
+      box-shadow var(--dur-fast, 0.2s) ease;
+  }
+
+  .field textarea {
+    min-height: 148px;
+    padding-top: 28px;
+    resize: vertical;
+  }
+
+  .field label {
+    position: absolute;
+    left: 16px;
+    top: 18px;
+    font-size: 1rem;
+    line-height: 1.25;
+    color: var(--color-text-3, var(--color-muted));
+    pointer-events: none;
+    transform-origin: left top;
+    transition:
+      transform var(--dur-fast, 0.15s) var(--ease-out, ease),
+      color var(--dur-fast, 0.15s) ease;
+  }
+
+  .field :is(input, textarea):focus + label,
+  .field :is(input, textarea):not(:placeholder-shown) + label {
+    transform: translateY(-10px) scale(0.78);
+    color: var(--color-text-2, var(--color-muted));
+  }
+
+  .field :is(input, textarea):focus-visible {
+    outline: 2px solid var(--color-focus, #2f6fd6);
+    outline-offset: 0;
+    border-color: var(--color-focus, #2f6fd6);
+    box-shadow: 0 0 0 4px rgb(var(--focus-rgb, 47 111 214) / 0.18);
+  }
+
+  /* Autorrelleno del navegador: sin fondo amarillo y la etiqueta sigue flotando. */
+  .field :is(input, textarea):-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px var(--color-surface-raised, #fff) inset;
+    -webkit-text-fill-color: var(--color-text);
+  }
+
+  .field.is-invalid :is(input, textarea) {
+    border-color: var(--color-error, #d93025);
+  }
+
+  .field.is-invalid :is(input, textarea):focus-visible {
+    outline-color: var(--color-error, #d93025);
+    border-color: var(--color-error, #d93025);
+    box-shadow: 0 0 0 4px rgb(217 48 37 / 0.16);
+  }
+
+  .field.is-invalid label {
+    color: var(--color-error, #d93025);
+  }
+
+  .field__hint,
+  .field__error {
+    margin: 0;
+    padding-inline: 2px;
+    font-size: var(--text-sm, 0.85rem);
+    line-height: 1.4;
+  }
+
+  .field__hint {
+    color: var(--color-text-2, var(--color-muted));
+  }
+
+  .field__error {
+    color: var(--color-error, #d93025);
+    font-weight: 500;
+  }
+
+  .field__error:empty {
+    display: none;
+  }
+
+  .field.is-invalid .field__hint {
+    display: none;
+  }
+
+  /* ---- vista previa del mensaje ---- */
+  .preview {
+    display: grid;
+    gap: var(--space-2, 8px);
+    margin: var(--space-2, 8px) 0 var(--space-5, 24px);
+    padding: var(--space-4, 16px);
+    background: var(--color-surface, #f4f6f9);
+    border-radius: var(--radius-lg, 16px) var(--radius-lg, 16px) var(--radius-lg, 16px) var(--radius-sm, 8px);
+  }
+
+  .preview__label {
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 600;
+    letter-spacing: var(--tracking-caps, 0.1em);
+    text-transform: uppercase;
+    color: var(--color-text-2, var(--color-muted));
+  }
+
+  .preview__text {
+    margin: 0;
+    font: inherit;
+    font-size: var(--text-sm, 0.92rem);
+    line-height: 1.5;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    color: var(--color-text);
+  }
+
+  .preview.is-empty .preview__text::before {
+    content: 'Empieza a escribir y aquí verás el mensaje tal como llegará.';
+    color: var(--color-text-3, var(--color-muted));
+  }
+
+  /* Campo obligatorio aún vacío: "[tu nombre]" en gris dentro de la vista previa.
+     El span lo crea el script (sin atributo de ámbito), por eso :global. */
+  .preview__text :global(.preview__hint) {
+    color: var(--color-text-3, var(--color-muted));
+  }
+
+  .form__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3, 12px);
+  }
+
+  .form__actions .btn {
+    min-width: 240px;
+  }
+
+  .form__after {
+    margin: var(--space-4, 16px) 0 0;
+    font-size: var(--text-sm, 0.9rem);
+    color: var(--color-text-2, var(--color-muted));
+  }
+
+  .form__after a {
+    color: var(--color-link, var(--color-primary));
+  }
+
+  .link-btn {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-weight: 600;
+    color: var(--color-link, var(--color-primary));
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    border-radius: var(--radius-sm, 8px);
+  }
+
+  @media (max-width: 860px) {
+    .contact {
+      grid-template-columns: 1fr;
+      gap: var(--space-6, 32px);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .form__actions .btn {
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .field-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .field label,
+    .field input,
+    .field textarea {
+      transition: none;
+    }
+  }
+</style>

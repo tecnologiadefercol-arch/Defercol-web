@@ -1,0 +1,160 @@
+---
+import { site, nav, brands, whatsappLink, contactIsPlaceholder } from '../data/site';
+
+const year = new Date().getFullYear();
+---
+
+<!-- El pie es oscuro con cualquier esquema: hereda el alcance .theme-dark del sistema. -->
+<footer class="site-footer theme-dark">
+  <div class="container footer-grid">
+    <div class="footer-about">
+      <a href="/" class="footer-brand">Defercol</a>
+      <p>Racores, válvulas e instrumentación para la industria colombiana.</p>
+      <a class="btn btn-whatsapp btn-sm" href={whatsappLink()} target="_blank" rel="noopener">
+        Cotizar por WhatsApp
+      </a>
+    </div>
+
+    <nav aria-label="Pie de página">
+      <h2 class="footer__title">Sitio</h2>
+      <ul>
+        {nav.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+        <li><a href="/catalogo">Catálogo PDF</a></li>
+      </ul>
+    </nav>
+
+    <div>
+      <h2 class="footer__title">Marcas</h2>
+      <ul>
+        {brands.map((b) => <li><a href={`/productos?marca=${b.slug}`}>{b.name}</a></li>)}
+      </ul>
+    </div>
+
+    <div>
+      <h2 class="footer__title">Contacto</h2>
+      <address>
+        {
+          /* La dirección se muestra solo cuando ya es real (site.ts). */
+          !contactIsPlaceholder && (
+            <p>
+              {site.address.street}<br />
+              {site.address.city}, Colombia
+            </p>
+          )
+        }
+        <p>
+          <a href={`tel:${site.phone.replace(/\s+/g, '')}`}>{site.phone}</a><br />
+          <a href={`mailto:${site.email}`}>{site.email}</a>
+        </p>
+        <p class="hours">{site.hours}</p>
+      </address>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <div class="container">
+      <p>© {year} {site.legalName} · Todos los derechos reservados.</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: auto;
+    background: var(--color-footer-bg);
+    color: var(--color-text-2);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr 1.3fr;
+    gap: var(--space-7);
+    padding-block: var(--space-9) var(--space-8);
+  }
+
+  .footer-about p {
+    max-width: 36ch;
+  }
+
+  .footer-brand {
+    display: inline-block;
+    margin-bottom: var(--space-2);
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-snug);
+    color: var(--color-heading);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+  }
+
+  .footer__title {
+    margin: 0 0 var(--space-4);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--color-heading);
+  }
+
+  .site-footer ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 2px;
+  }
+
+  /* Enlaces con paso de 36 px (18 px de texto + 6 px arriba y abajo): objetivo táctil cómodo. */
+  .site-footer a:not(.btn) {
+    display: inline-block;
+    padding-block: 6px;
+    color: var(--color-text);
+    text-decoration: none;
+    border-radius: 2px;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+
+  .site-footer a:not(.btn):hover {
+    color: var(--color-accent-text);
+  }
+
+  .site-footer address a {
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+
+  address {
+    font-style: normal;
+  }
+
+  .hours {
+    font-size: var(--text-sm);
+    color: var(--color-text-3);
+  }
+
+  .footer-bottom {
+    border-top: 1px solid var(--color-border);
+    padding-block: var(--space-4);
+    font-size: var(--text-sm);
+    color: var(--color-text-3);
+  }
+
+  .footer-bottom p {
+    margin: 0;
+  }
+
+  @media (max-width: 900px) {
+    .footer-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .footer-grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-6);
+      padding-block: var(--space-8) var(--space-7);
+    }
+  }
+</style>

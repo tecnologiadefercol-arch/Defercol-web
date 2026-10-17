@@ -1,0 +1,496 @@
+---
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import { site, brandBySlug, categoryBySlug, whatsappLink } from '../../data/site';
+
+export async function getStaticPaths() {
+  const products = await getCollection('products');
+  return products.map((product) => ({
+    params: { slug: product.id },
+    props: { product },
+  }));
+}
+
+interface Props {
+  product: CollectionEntry<'products'>;
+}
+
+const { product } = Astro.props;
+const { Content } = await render(product);
+const { title, summary, brand, category, image, imageFit, sku, specs, datasheet } = product.data;
+
+const brandInfo = brandBySlug(brand);
+const categoryInfo = categoryBySlug(category);
+const brandName = brandInfo?.name ?? brand;
+
+const all = await getCollection('products');
+const others = all.filter((p) => p.id !== product.id);
+const related = [
+  ...others.filter((p) => p.data.category === category),
+  ...others.filter((p) => p.data.category !== category && p.data.brand === brand),
+].slice(0, 3);
+
+const imageSrc = image ?? '/images/productos/placeholder.svg';
+const productUrl = new URL(`/productos/${product.id}`, site.url).toString();
+
+/**
+ * Una sola fuente para el botón principal y la barra inferior. "Cantidad:" queda
+ * como línea para que el visitante la complete antes de enviar; la URL permite al
+ * asesor identificar la referencia en un clic.
+ */
+const message = [
+  'Hola Defercol, quiero cotizar:',
+  `• ${title}${sku ? ` (Ref. ${sku})` : ''} — ${brandName}`,
+  'Cantidad: ',
+  productUrl,
+].join('\n');
+const waHref = whatsappLink(message);
+const datasheetIsLocal = !!datasheet && datasheet.startsWith('/');
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: title,
+  description: summary,
+  sku,
+  image: new URL(imageSrc, site.url).toString(),
+  brand: { '@type': 'Brand', name: brandName },
+  category: categoryInfo?.name ?? category,
+  url: productUrl,
+};
+---
+
+<Layout title={title} description={summary} image={image} jsonLd={jsonLd}>
+  <section class="section product">
+    <div class="container">
+      <nav class="breadcrumbs" aria-label="Ruta de navegación">
+        <ol>
+          <li><a href="/">Inicio</a></li>
+          <li><a href="/productos">Productos</a></li>
+          <li><a href={`/productos?categoria=${category}`}>{categoryInfo?.name ?? category}</a></li>
+          <li aria-current="page">{title}</li>
+        </ol>
+      </nav>
+
+      <div class="product__layout">
+        <div class="product__media" data-gallery data-fit={imageFit}>
+          <img
+            src={imageSrc}
+            alt={title}
+            width="800"
+            height="600"
+            fetchpriority="high"
+            decoding="async"
+          />
+        </div>
+
+        <div class="product__info">
+          <div class="product__meta">
+            <span class="badge">{brandName}</span>
+            {sku && <span class="product__sku">Ref. <span class="mono">{sku}</span></span>}
+          </div>
+          <h1>{title}</h1>
+          <p class="lead product__summary">{summary}</p>
+
+          <div class="product__actions">
+            <a class="btn btn-whatsapp" href={waHref} target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+                <path
+                  d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.885-9.885 9.885m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"
+                ></path>
+              </svg>
+              Cotizar por WhatsApp
+            </a>
+            {
+              datasheet && (
+                <a
+                  class="btn btn-ghost"
+                  href={datasheet}
+                  target="_blank"
+                  rel="noopener"
+                  download={datasheetIsLocal ? '' : undefined}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+                    <path d="M14 3v5h5M9 13h6M9 17h6" />
+                  </svg>
+                  Ficha técnica (PDF)
+                </a>
+              )
+            }
+          </div>
+
+          {
+            specs.length > 0 && (
+              <section class="product__specs" aria-labelledby="specs-title">
+                <h2 id="specs-title" class="product__specs-title">Especificaciones</h2>
+                <table class="specs">
+                  <caption class="visually-hidden">Especificaciones de {title}</caption>
+                  <tbody>
+                    {specs.map((s) => (
+                      <tr>
+                        <th scope="row">{s.label}</th>
+                        <td>{s.value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </section>
+            )
+          }
+        </div>
+      </div>
+
+      <div class="product__description prose">
+        <Content />
+      </div>
+    </div>
+  </section>
+
+  {
+    related.length > 0 && (
+      <section class="section section--alt">
+        <div class="container">
+          <div class="section-head">
+            <h2>También te puede interesar.</h2>
+          </div>
+          <div class="grid grid--3 is-in">
+            {related.map((p, i) => (
+              <ProductCard product={p} index={i} />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!--
+    Barra de compra: aparece cuando las acciones salen por arriba del viewport y
+    se oculta sobre el pie. `inert` mientras está oculta: ni tab stop ni enlace
+    duplicado para lectores de pantalla.
+  -->
+  <div class="buybar bar--bottom glass--thin" id="buybar" inert aria-label="Cotizar este producto">
+    <div class="container buybar__inner">
+      <img
+        class="buybar__thumb"
+        src={imageSrc}
+        alt=""
+        width="40"
+        height="40"
+        loading="lazy"
+        decoding="async"
+        style={imageFit === 'contain' ? 'object-fit: contain; background: #fff' : undefined}
+      />
+      <div class="buybar__text">
+        <strong class="buybar__title">{title}</strong>
+        {sku && <span class="buybar__sku">Ref. <span class="mono">{sku}</span></span>}
+      </div>
+      <a class="btn btn-whatsapp buybar__cta" href={waHref} target="_blank" rel="noopener">Cotizar por WhatsApp</a>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  let observers: IntersectionObserver[] = [];
+
+  function initBuybar() {
+    const bar = document.getElementById('buybar');
+    const trigger = document.querySelector<HTMLElement>('.product__actions');
+    const footer = document.querySelector('footer');
+    if (!bar || !trigger || bar.dataset.ready) return; // idempotente (View Transitions)
+    bar.dataset.ready = '1';
+
+    let pastTrigger = false;
+    let footerVisible = false;
+    const update = () => {
+      const show = pastTrigger && !footerVisible;
+      bar.classList.toggle('is-visible', show);
+      if (show) bar.removeAttribute('inert');
+      else bar.setAttribute('inert', '');
+      document.body.classList.toggle('has-buybar', show);
+    };
+
+    // Raíz extendida hacia abajo: las acciones "intersecan" mientras estén en el viewport o por
+    // debajo de él, y dejan de hacerlo solo al salir por arriba. Así la barra no aparece en la carga
+    // inicial (acciones bajo el pliegue) y sí aparece aunque el scroll llegue de un salto (restauración
+    // de posición, teclado) sin pasar por el viewport.
+    const io1 = new IntersectionObserver(
+      ([e]) => {
+        pastTrigger = !e.isIntersecting;
+        update();
+      },
+      { rootMargin: '0px 0px 99999px 0px', threshold: 0 },
+    );
+    io1.observe(trigger);
+    observers.push(io1);
+
+    if (footer) {
+      const io2 = new IntersectionObserver(
+        ([e]) => {
+          footerVisible = e.isIntersecting;
+          update();
+        },
+        { threshold: 0 },
+      );
+      io2.observe(footer);
+      observers.push(io2);
+    }
+  }
+
+  initBuybar();
+  document.addEventListener('astro:page-load', initBuybar);
+  document.addEventListener('astro:before-swap', () => {
+    observers.forEach((o) => o.disconnect());
+    observers = [];
+    document.body.classList.remove('has-buybar');
+  });
+</script>
+
+<style>
+  /* Menos aire sobre las migas: el producto entra en el primer pliegue. */
+  .product {
+    padding-top: var(--space-6);
+  }
+
+  .product .breadcrumbs {
+    margin-bottom: var(--space-5);
+  }
+
+  /* Los enlaces de las migas llevan padding vertical (área táctil); el elemento actual, sin enlace, iguala la línea base. */
+  .product .breadcrumbs li[aria-current] {
+    padding-block: var(--space-2);
+  }
+
+  .product__layout {
+    display: grid;
+    grid-template-columns: 55fr 45fr;
+    gap: var(--space-8);
+    align-items: start;
+  }
+
+  .product__media {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+  }
+
+  .product__media img {
+    width: 100%;
+    height: auto; /* el atributo height="600" no debe fijar la altura: manda el 4:3 */
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+
+  /* Recortes sobre fondo blanco (imageFit: contain): la pieza completa, con aire, sobre blanco. */
+  .product__media[data-fit='contain'] {
+    background: #fff;
+  }
+
+  .product__media[data-fit='contain'] img {
+    object-fit: contain;
+    padding: 6%;
+    box-sizing: border-box;
+  }
+
+  .product__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+
+  .product__sku {
+    color: var(--color-text-2);
+    font-size: var(--text-sm);
+  }
+
+  .product__info h1 {
+    font-size: var(--text-4xl);
+    letter-spacing: var(--tracking-tight);
+    text-wrap: balance;
+  }
+
+  .product__summary {
+    margin-bottom: 0;
+  }
+
+  .product__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: var(--space-5) 0 var(--space-6);
+  }
+
+  .product__specs {
+    margin: 0;
+  }
+
+  .product__specs-title {
+    margin: 0 0 var(--space-1);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--color-text-2);
+  }
+
+  /* Dos columnas separadas por líneas finas y peso tipográfico, sin cajas grises. */
+  .specs {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+    line-height: 1.45;
+    margin-top: var(--space-2);
+  }
+
+  .specs th,
+  .specs td {
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+
+  .specs th {
+    width: 38%;
+    padding-right: var(--space-4);
+    color: var(--color-text-2);
+    font-weight: var(--weight-medium);
+    background: none;
+  }
+
+  .specs td {
+    color: var(--color-text);
+    font-weight: var(--weight-medium);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .specs tr:last-child > * {
+    border-bottom: 0;
+  }
+
+  .product__description {
+    max-width: 760px;
+    margin-top: var(--space-8);
+  }
+
+  /* Los títulos del Markdown son secciones del producto, no rivales del nombre (h1). */
+  .product .product__description :global(h2) {
+    margin: var(--space-7) 0 var(--space-3);
+    font-size: var(--text-xl);
+    line-height: 1.25;
+    letter-spacing: var(--tracking-snug);
+    font-weight: var(--weight-semibold);
+  }
+
+  .product .product__description :global(h2:first-child) {
+    margin-top: 0;
+  }
+
+  .product .product__description :global(h3) {
+    margin: var(--space-5) 0 var(--space-2);
+    font-size: var(--text-lg);
+  }
+
+  /* ---- Barra de compra ---- */
+  .buybar {
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    opacity: 0;
+    transition:
+      transform var(--dur-slow) var(--ease-out-expo),
+      opacity var(--dur-fast) var(--ease-out);
+  }
+
+  .buybar.is-visible {
+    opacity: 1;
+  }
+
+  .buybar__inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    min-height: 64px;
+  }
+
+  .buybar__thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    background: var(--color-surface-2);
+    flex: none;
+  }
+
+  .buybar__text {
+    display: grid;
+    min-width: 0;
+    flex: 1;
+    line-height: 1.25;
+  }
+
+  .buybar__title {
+    font-size: var(--text-sm);
+    color: var(--color-heading);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .buybar__sku {
+    font-size: var(--text-xs);
+    color: var(--color-text-2);
+  }
+
+  .buybar__cta {
+    flex: none;
+    min-height: 44px;
+    padding-inline: var(--space-4);
+  }
+
+  /* El flotante de WhatsApp cede mientras la barra está visible (misma acción, un solo acceso). */
+  :global(body.has-buybar .wa-float) {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  @media (max-width: 860px) {
+    .product__layout {
+      grid-template-columns: 1fr;
+      gap: var(--space-6);
+    }
+  }
+
+  @media (max-width: 600px) {
+    /* El nombre completo ya es el h1 justo debajo: las migas quedan en una línea. */
+    .product .breadcrumbs li[aria-current] {
+      display: none;
+    }
+
+    .buybar__thumb {
+      display: none;
+    }
+
+    .buybar__cta {
+      font-size: var(--text-sm);
+      padding-inline: var(--space-3);
+    }
+
+    .product__actions .btn {
+      flex: 1 1 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .buybar {
+      transition: none;
+    }
+  }
+</style>

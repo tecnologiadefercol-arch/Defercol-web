@@ -1,0 +1,6 @@
+Coloca aquí el catálogo en PDF con el nombre exacto:
+
+  catalogo-defercol.pdf
+
+El botón "Descargar catálogo" del sitio apunta a /catalogo/catalogo-defercol.pdf.
+Si cambias el nombre, actualiza "catalogPath" en src/data/site.ts.

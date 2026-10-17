@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <!-- Fondo transparente: funciona sobre tarjetas claras y sobre el cristal oscuro del inicio. -->
+  <rect width="400" height="300" fill="#8da0b6" fill-opacity="0.12"/>
+  <g fill="none" stroke="#8da0b6" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M110 150h60"/>
+    <rect x="170" y="128" width="60" height="44" rx="6"/>
+    <path d="M230 150h60"/>
+    <path d="M130 130v40M270 130v40"/>
+  </g>
+  <text x="200" y="230" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#8da0b6">Imagen del producto</text>
+</svg>

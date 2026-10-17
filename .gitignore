@@ -1,0 +1,26 @@
+# build output
+dist/
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# environment variables
+.env
+.env.production
+
+# macOS-specific files
+.DS_Store
+
+# master de video 4K (~100 MB, excede el límite de GitHub)
+assets/videos/brand-film/dafercol-brand-film-4k.mp4
+
+# configuración local de Claude Code
+.claude/settings.local.json
