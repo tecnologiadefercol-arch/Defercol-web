@@ -1,7 +1,8 @@
 ---
 title: 'Unión de golpe Fig. 200 / 206'
 brand: ferreinstrumentos
-category: uniones-de-golpe
+category: racores
+subcategory: uniones-de-golpe
 summary: 'Para servicios generales hasta 2.000 psi en aplicaciones de aire, agua, petróleo y gas. Para soldar y roscar.'
 image: '/images/ferreinstrumentos/union-de-golpe-fig-200-206.jpg'
 imageFit: contain

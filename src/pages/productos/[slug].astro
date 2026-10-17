@@ -3,7 +3,7 @@ import { getCollection, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import ProductCard from '../../components/ProductCard.astro';
-import { site, brandBySlug, categoryBySlug, whatsappLink } from '../../data/site';
+import { site, brandBySlug, categoryBySlug, subcategoryBySlug, whatsappLink } from '../../data/site';
 
 export async function getStaticPaths() {
   const products = await getCollection('products');
@@ -19,17 +19,21 @@ interface Props {
 
 const { product } = Astro.props;
 const { Content } = await render(product);
-const { title, summary, brand, category, image, imageFit, sku, specs, datasheet } = product.data;
+const { title, summary, brand, category, subcategory, image, imageFit, sku, specs, datasheet } = product.data;
 
 const brandInfo = brandBySlug(brand);
 const categoryInfo = categoryBySlug(category);
+const subInfo = subcategoryBySlug(category, subcategory);
 const brandName = brandInfo?.name ?? brand;
 
 const all = await getCollection('products');
 const others = all.filter((p) => p.id !== product.id);
+// Relacionados: misma subcategoría (primero de otras marcas, para comparar), luego misma categoría.
+const sameSub = others.filter((p) => p.data.category === category && p.data.subcategory === subcategory);
 const related = [
-  ...others.filter((p) => p.data.category === category),
-  ...others.filter((p) => p.data.category !== category && p.data.brand === brand),
+  ...sameSub.filter((p) => p.data.brand !== brand),
+  ...sameSub.filter((p) => p.data.brand === brand),
+  ...others.filter((p) => p.data.category === category && p.data.subcategory !== subcategory),
 ].slice(0, 3);
 
 const imageSrc = image ?? '/images/productos/placeholder.svg';
@@ -57,7 +61,7 @@ const jsonLd = {
   sku,
   image: new URL(imageSrc, site.url).toString(),
   brand: { '@type': 'Brand', name: brandName },
-  category: categoryInfo?.name ?? category,
+  category: [categoryInfo?.name ?? category, subInfo?.name].filter(Boolean).join(' > '),
   url: productUrl,
 };
 ---
@@ -70,6 +74,7 @@ const jsonLd = {
           <li><a href="/">Inicio</a></li>
           <li><a href="/productos">Productos</a></li>
           <li><a href={`/productos?categoria=${category}`}>{categoryInfo?.name ?? category}</a></li>
+          {subInfo && <li><a href={`/productos?categoria=${category}&sub=${subcategory}`}>{subInfo.name}</a></li>}
           <li aria-current="page">{title}</li>
         </ol>
       </nav>

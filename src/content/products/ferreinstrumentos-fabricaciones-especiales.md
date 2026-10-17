@@ -1,7 +1,8 @@
 ---
 title: 'Fabricaciones especiales'
 brand: ferreinstrumentos
-category: uniones-de-golpe
+category: racores
+subcategory: uniones-de-golpe
 summary: 'Fabricamos uniones, tubería y demás elementos que le permitan llevar sus proyectos a otro nivel.'
 image: '/images/ferreinstrumentos/fabricaciones-especiales.jpg'
 imageFit: cover

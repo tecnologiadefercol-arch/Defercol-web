@@ -2,6 +2,7 @@
 title: 'Termómetros'
 brand: ferreinstrumentos
 category: instrumentacion
+subcategory: temperatura
 summary: 'Instrumentos para medición de temperatura en procesos industriales.'
 image: '/images/ferreinstrumentos/termometros.jpg'
 imageFit: contain

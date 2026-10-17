@@ -1,7 +1,8 @@
 ---
 title: 'Swivel Joints'
 brand: ferreinstrumentos
-category: uniones-de-golpe
+category: racores
+subcategory: uniones-de-golpe
 summary: 'Juntas giratorias que permiten movimiento angular sin afectar la continuidad del flujo, para 6.000 PSI NPT y Fig. 1502.'
 image: '/images/ferreinstrumentos/swivel-joints.jpg'
 imageFit: contain

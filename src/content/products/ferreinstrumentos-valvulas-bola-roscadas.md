@@ -2,6 +2,7 @@
 title: 'Válvulas bola roscadas'
 brand: ferreinstrumentos
 category: valvulas
+subcategory: bola
 summary: 'Válvulas de conexión NPT, en bronce cromado e inoxidable. Para líneas de baja y media presión.'
 image: '/images/ferreinstrumentos/valvulas-bola-roscadas.jpg'
 imageFit: contain

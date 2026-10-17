@@ -1,7 +1,8 @@
 ---
 title: 'Unión de golpe Fig. 2202'
 brand: ferreinstrumentos
-category: uniones-de-golpe
+category: racores
+subcategory: uniones-de-golpe
 summary: 'Para servicio con gas agrio (H₂S) y ambientes corrosivos bajo especificaciones NACE.'
 image: '/images/ferreinstrumentos/union-de-golpe-fig-2202.jpg'
 imageFit: contain

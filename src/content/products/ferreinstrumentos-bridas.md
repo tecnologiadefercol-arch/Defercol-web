@@ -1,7 +1,8 @@
 ---
 title: 'Bridas'
 brand: ferreinstrumentos
-category: accesorios-tuberia
+category: tuberia
+subcategory: accesorios
 summary: 'Componentes para la conexión segura de tuberías, válvulas y equipos, fabricados bajo normas ASME/ANSI para servicio en procesos industriales, petróleo y gas.'
 image: '/images/ferreinstrumentos/bridas.jpg'
 imageFit: contain

@@ -57,18 +57,20 @@ export const brands: Brand[] = [
   {
     slug: 'swagelok',
     name: 'Swagelok',
-    description: 'Racores de tubo, válvulas, reguladores y mangueras para sistemas de fluidos.',
+    description:
+      'Racores para tubo, válvulas, reguladores, mangueras, filtros, instrumentación y herramientas para sistemas de fluidos.',
     website: 'https://www.swagelok.com',
   },
   {
     slug: 'valveco',
     name: 'Valveco',
-    description: 'Válvulas de compuerta, globo, cheque y bola para proceso.',
+    description:
+      'Válvulas solenoides, de bola y mariposa, actuadores, presostatos y transmisores, manómetros, racores para tubing y accesorios sanitarios.',
   },
   {
     slug: 'comfit',
     name: 'Comfit',
-    description: 'Racores de compresión y mangueras hidráulicas.',
+    description: 'Válvulas de instrumentación, manifolds y monobridas, racores para tubing y accesorios para tubería.',
   },
   {
     slug: 'ferreinstrumentos',
@@ -79,73 +81,146 @@ export const brands: Brand[] = [
   },
 ];
 
+export interface Subcategory {
+  slug: string;
+  name: string;
+}
+
 export interface Category {
   slug: string;
   name: string;
   /** Nombre corto para controles segmentados y chips (catálogo). */
   shortName: string;
   description: string;
+  /** Segundo nivel del árbol. Cada producto declara una de estas en `subcategory`. */
+  subcategories: Subcategory[];
 }
 
+/**
+ * Árbol del catálogo: 8 categorías y sus subcategorías. El orden aquí es el
+ * orden en los filtros, el inicio y el pie. Para mover un producto basta con
+ * cambiar `category` y `subcategory` en su archivo de src/content/products/;
+ * el esquema rechaza una subcategoría que no pertenezca a su categoría.
+ */
 export const categories: Category[] = [
-  {
-    slug: 'racores',
-    name: 'Racores y conexiones',
-    shortName: 'Racores',
-    description: 'Tubo, compresión y rosca en inoxidable, bronce y acero al carbono.',
-  },
   {
     slug: 'valvulas',
     name: 'Válvulas',
     shortName: 'Válvulas',
-    description: 'Bola, compuerta, globo, cheque y aguja.',
+    description: 'Bola, aguja, cheque, solenoides, mariposa, diafragma, manifolds y actuadores.',
+    subcategories: [
+      { slug: 'bola', name: 'Bola' },
+      { slug: 'aguja', name: 'Aguja y regulación' },
+      { slug: 'cheque', name: 'Cheque y antirretorno' },
+      { slug: 'alivio', name: 'Alivio y seguridad' },
+      { slug: 'solenoides', name: 'Solenoides y bobinas' },
+      { slug: 'mariposa', name: 'Mariposa' },
+      { slug: 'compuerta-globo-macho', name: 'Compuerta, globo y tapón' },
+      { slug: 'diafragma-fuelle', name: 'Diafragma y fuelle' },
+      { slug: 'manifolds', name: 'Manifolds y monobridas' },
+      { slug: 'actuadores', name: 'Actuadores' },
+      { slug: 'acoples-rapidos', name: 'Enchufes rápidos' },
+      { slug: 'especiales', name: 'Vapor y especiales' },
+    ],
+  },
+  {
+    slug: 'racores',
+    name: 'Racores y conexiones',
+    shortName: 'Racores',
+    description: 'Racores para tubo, alta presión, VCR y VCO, roscados, soldables y uniones de golpe.',
+    subcategories: [
+      { slug: 'racores-para-tubo', name: 'Racores para tubo' },
+      { slug: 'alta-presion', name: 'Alta presión' },
+      { slug: 'cierre-frontal', name: 'Cierre frontal VCR y VCO' },
+      { slug: 'roscados', name: 'Roscados' },
+      { slug: 'soldables', name: 'Para soldar' },
+      { slug: 'uniones-de-golpe', name: 'Uniones de golpe e integrales' },
+      { slug: 'especiales', name: 'Bridas, vacío y especiales' },
+    ],
   },
   {
     slug: 'tuberia',
     name: 'Tubería y mangueras',
     shortName: 'Tubería',
-    description: 'Tubería inoxidable y mangueras hidráulicas y flexibles.',
+    description: 'Tubo y tubing, mangueras, accesorios de tubería y línea sanitaria.',
+    subcategories: [
+      { slug: 'tubo', name: 'Tubo y tubing' },
+      { slug: 'mangueras', name: 'Mangueras y tubo flexible' },
+      { slug: 'accesorios', name: 'Bridas, codos y accesorios' },
+      { slug: 'sanitaria', name: 'Línea sanitaria' },
+    ],
   },
   {
     slug: 'instrumentacion',
     name: 'Instrumentación y medición',
     shortName: 'Instrumentación',
-    description: 'Manómetros, termómetros, transmisores y montaje.',
+    description: 'Manómetros, temperatura, transmisores, presostatos y medición de caudal.',
+    subcategories: [
+      { slug: 'manometros', name: 'Manómetros' },
+      { slug: 'temperatura', name: 'Temperatura' },
+      { slug: 'presion', name: 'Transmisores de presión' },
+      { slug: 'presostatos', name: 'Presostatos y termostatos' },
+      { slug: 'caudal', name: 'Caudal y contadores' },
+    ],
   },
   {
     slug: 'reguladores',
     name: 'Reguladores de presión',
     shortName: 'Reguladores',
-    description: 'Presión y contrapresión para gases y líquidos.',
+    description: 'Reductores de presión, contrapresión y reguladores para gases especiales.',
+    subcategories: [
+      { slug: 'presion', name: 'Reductores de presión' },
+      { slug: 'contrapresion', name: 'Contrapresión' },
+      { slug: 'especiales', name: 'Gases y aplicaciones especiales' },
+    ],
   },
   {
-    slug: 'uniones-de-golpe',
-    name: 'Uniones de golpe y accesorios integrales',
-    shortName: 'Uniones de golpe',
-    description: 'Hammer unions Fig. 100 a 2202, codos y tees integrales, swivel joints y pup joints.',
-  },
-  {
-    slug: 'accesorios-tuberia',
-    name: 'Accesorios de tubería',
-    shortName: 'Accesorios',
-    description: 'Bridas, codos, tees, caps, ring gaskets y juntas antivibratorias.',
+    slug: 'muestreo',
+    name: 'Filtración y toma de muestras',
+    shortName: 'Muestreo',
+    description: 'Filtros, cilindros de muestreo y sistemas para instrumentación analítica.',
+    subcategories: [
+      { slug: 'filtros', name: 'Filtros' },
+      { slug: 'cilindros', name: 'Cilindros de muestreo' },
+      { slug: 'sistemas', name: 'Sistemas analíticos' },
+    ],
   },
   {
     slug: 'herramientas',
-    name: 'Herramientas antichispa y manuales',
+    name: 'Herramientas',
     shortName: 'Herramientas',
-    description: 'Llaves, macetas, picas y palas antichispa para áreas clasificadas, y línea Truper.',
+    description: 'Herramientas manuales y antichispa, corte y doblado de tubo y soldadura orbital.',
+    subcategories: [
+      { slug: 'manuales', name: 'Manuales y antichispa' },
+      { slug: 'tubo', name: 'Corte y doblado de tubo' },
+      { slug: 'soldadura', name: 'Soldadura orbital' },
+    ],
   },
   {
     slug: 'mantenimiento',
     name: 'Mantenimiento y repuestos',
     shortName: 'Mantenimiento',
-    description: 'Kits de reparación, sellos O-ring, lubricantes y desengrasantes industriales.',
+    description: 'Repuestos y kits de reparación, lubricantes, sellantes y químicos industriales.',
+    subcategories: [
+      { slug: 'repuestos', name: 'Repuestos y kits' },
+      { slug: 'quimicos', name: 'Lubricantes y sellantes' },
+    ],
   },
 ];
 
+/**
+ * Enlaces viejos a categorías que pasaron a ser subcategorías
+ * (?categoria=uniones-de-golpe sigue funcionando en el catálogo).
+ */
+export const legacyCategories: Record<string, { category: string; subcategory: string }> = {
+  'uniones-de-golpe': { category: 'racores', subcategory: 'uniones-de-golpe' },
+  'accesorios-tuberia': { category: 'tuberia', subcategory: 'accesorios' },
+};
+
 export const brandBySlug = (slug: string) => brands.find((b) => b.slug === slug);
 export const categoryBySlug = (slug: string) => categories.find((c) => c.slug === slug);
+export const subcategoryBySlug = (category: string, sub: string) =>
+  categoryBySlug(category)?.subcategories.find((s) => s.slug === sub);
 
 /** Enlace de WhatsApp con mensaje opcional prellenado. */
 export function whatsappLink(message = 'Hola Defercol, quiero una cotización.') {

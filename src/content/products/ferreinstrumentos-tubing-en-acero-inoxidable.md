@@ -2,6 +2,7 @@
 title: 'Tubing en acero inoxidable'
 brand: ferreinstrumentos
 category: tuberia
+subcategory: tubo
 summary: 'Tubería de precisión para conducción de fluidos y gases de instrumentación.'
 image: '/images/ferreinstrumentos/tubing-en-acero-inoxidable.jpg'
 imageFit: cover

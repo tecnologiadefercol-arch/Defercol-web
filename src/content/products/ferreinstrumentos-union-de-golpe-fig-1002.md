@@ -1,7 +1,8 @@
 ---
 title: 'Unión de golpe Fig. 1002'
 brand: ferreinstrumentos
-category: uniones-de-golpe
+category: racores
+subcategory: uniones-de-golpe
 summary: 'Para líneas de choke & kill, cementación y acidificación hasta 10.000 psi. Para soldar y roscar.'
 image: '/images/ferreinstrumentos/union-de-golpe-fig-1002.jpg'
 imageFit: contain

@@ -1,7 +1,8 @@
 ---
 title: 'Unión inflable (Seal-O-Grip)'
 brand: ferreinstrumentos
-category: uniones-de-golpe
+category: racores
+subcategory: uniones-de-golpe
 summary: 'Conexión para líneas de lodo y fluidos de baja presión con sello neumático inflable resistente a la abrasión. Cierre seguro que tolera desalineaciones de la tubería.'
 image: '/images/ferreinstrumentos/union-inflable-seal-o-grip.jpg'
 imageFit: contain

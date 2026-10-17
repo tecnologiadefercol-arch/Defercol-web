@@ -15,6 +15,7 @@ const products = defineCollection({
     title: z.string(),
     brand: z.enum(brandSlugs),
     category: z.enum(categorySlugs),
+    subcategory: z.string(),
     summary: z.string().max(220),
     image: z.string().optional(),
     /** `contain` para fotos recortadas sobre fondo blanco/transparente; `cover` (defecto) para fotos a sangre. */
@@ -25,6 +26,15 @@ const products = defineCollection({
     datasheet: z.string().optional(),
     tags: z.array(z.string()).default([]),
     order: z.number().default(100),
+  }).superRefine((d, ctx) => {
+    const cat = categories.find((c) => c.slug === d.category);
+    if (!cat?.subcategories.some((s) => s.slug === d.subcategory)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['subcategory'],
+        message: `"${d.subcategory}" no es una subcategoría de "${d.category}". Opciones: ${cat?.subcategories.map((s) => s.slug).join(', ')}`,
+      });
+    }
   }),
 });
 

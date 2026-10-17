@@ -2,6 +2,7 @@
 title: 'Macetas en bronce con cabo de fibra de vidrio'
 brand: ferreinstrumentos
 category: herramientas
+subcategory: manuales
 summary: 'Macetas de bronce antichispa (Non-sparkling) para trabajos en áreas clasificadas potencialmente explosivas. Con cabos ergonómicos en fibra de vidrio.'
 image: '/images/ferreinstrumentos/macetas-en-bronce-con-cabo-de-fibra-de-vidrio.jpg'
 imageFit: contain

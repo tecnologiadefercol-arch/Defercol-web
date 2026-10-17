@@ -2,6 +2,7 @@
 title: 'Aceite 3 en Uno'
 brand: ferreinstrumentos
 category: mantenimiento
+subcategory: quimicos
 summary: 'Lubricante ligero para mantenimiento de herramientas y mecanismos.'
 image: '/images/ferreinstrumentos/aceite-3-en-uno.jpg'
 imageFit: contain

@@ -2,6 +2,7 @@
 title: 'Válvulas tapón integrales (Plug Valves)'
 brand: ferreinstrumentos
 category: valvulas
+subcategory: compuerta-globo-macho
 summary: 'Válvulas de servicio severo diseñadas para lodos, cementación y fluidos abrasivos.'
 image: '/images/ferreinstrumentos/valvulas-tapon-integrales-plug-valves.jpg'
 imageFit: contain

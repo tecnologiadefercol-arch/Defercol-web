@@ -2,6 +2,7 @@
 title: 'Válvula Mariposa'
 brand: ferreinstrumentos
 category: valvulas
+subcategory: mariposa
 summary: 'Válvulas de cuarto de vuelta para aislamiento y control de flujo en líneas de proceso, agua, lodos y servicios industriales. Tipo Lug y wafer, de 2" a 16".'
 image: '/images/ferreinstrumentos/valvula-mariposa.jpg'
 imageFit: contain

@@ -1,7 +1,8 @@
 ---
 title: 'Codo integral'
 brand: ferreinstrumentos
-category: uniones-de-golpe
+category: racores
+subcategory: uniones-de-golpe
 summary: 'Accesorio integral para cambios de dirección en sistemas de bombeo y producción. Fig 1502.'
 image: '/images/ferreinstrumentos/codo-integral.jpg'
 imageFit: contain

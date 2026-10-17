@@ -1,7 +1,8 @@
 ---
 title: 'Unión de tanque (Hammer Seal Unions)'
 brand: ferreinstrumentos
-category: uniones-de-golpe
+category: racores
+subcategory: uniones-de-golpe
 summary: 'Uniones de sello con O-ring reemplazable para conexiones rápidas en tanques y equipos de almacenamiento hasta 150 psi. Compensan desalineaciones de tubería de hasta 7°.'
 image: '/images/ferreinstrumentos/union-de-tanque-hammer-seal-unions.jpg'
 imageFit: contain

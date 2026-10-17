@@ -1,7 +1,8 @@
 ---
 title: 'Tee integral'
 brand: ferreinstrumentos
-category: uniones-de-golpe
+category: racores
+subcategory: uniones-de-golpe
 summary: 'Accesorio forjado de alta presión para derivación de líneas. Fig 1502.'
 image: '/images/ferreinstrumentos/tee-integral.jpg'
 imageFit: contain

@@ -2,6 +2,7 @@
 title: 'Llaves en bronce'
 brand: ferreinstrumentos
 category: herramientas
+subcategory: manuales
 summary: 'Herramientas de ajuste seguras para áreas clasificadas.'
 image: '/images/ferreinstrumentos/llaves-en-bronce.jpg'
 imageFit: contain

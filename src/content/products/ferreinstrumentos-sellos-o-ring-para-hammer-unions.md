@@ -2,6 +2,7 @@
 title: 'Sellos O-Ring para Hammer Unions'
 brand: ferreinstrumentos
 category: mantenimiento
+subcategory: repuestos
 summary: 'Empaques y oring para garantizar el sellado de uniones de golpe. Para figuras 206, 602, 1002 y 1502.'
 image: '/images/ferreinstrumentos/sellos-o-ring-para-hammer-unions.jpg'
 imageFit: contain

@@ -2,6 +2,7 @@
 title: 'WD-40'
 brand: ferreinstrumentos
 category: mantenimiento
+subcategory: quimicos
 summary: 'Lubricante multipropósito para protección y mantenimiento industrial.'
 image: '/images/ferreinstrumentos/wd-40.jpg'
 imageFit: contain

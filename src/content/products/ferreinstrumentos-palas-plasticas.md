@@ -2,6 +2,7 @@
 title: 'Palas plásticas'
 brand: ferreinstrumentos
 category: herramientas
+subcategory: manuales
 summary: 'Herramientas resistentes a la corrosión y a productos químicos, diseñadas para la recolección y manejo seguro de materiales absorbentes y residuos generados durante la atención de derrames.'
 image: '/images/ferreinstrumentos/palas-plasticas.jpg'
 imageFit: contain

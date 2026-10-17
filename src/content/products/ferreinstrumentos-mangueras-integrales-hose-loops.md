@@ -1,7 +1,8 @@
 ---
 title: 'Mangueras integrales (Hose Loops)'
 brand: ferreinstrumentos
-category: uniones-de-golpe
+category: racores
+subcategory: uniones-de-golpe
 summary: 'Conjuntos flexibles de alta presión para transferencia de fluidos. Fig 1502.'
 image: '/images/ferreinstrumentos/mangueras-integrales-hose-loops.jpg'
 imageFit: contain

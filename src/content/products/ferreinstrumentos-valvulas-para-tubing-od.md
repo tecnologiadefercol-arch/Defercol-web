@@ -2,6 +2,7 @@
 title: 'Válvulas para tubing OD'
 brand: ferreinstrumentos
 category: valvulas
+subcategory: aguja
 summary: 'Válvulas para regulación, aislamiento y venteo de fluidos en sistemas de instrumentación de alta presión, diseñados para proporcionar control preciso y conexiones libres de fugas. Disponibles en tamaños de 1/8″ a 1″.'
 image: '/images/ferreinstrumentos/valvulas-para-tubing-od.jpg'
 imageFit: contain

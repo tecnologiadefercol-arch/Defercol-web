@@ -14,7 +14,7 @@
  * Un solo tab stop por tarjeta: el enlace del título cubre toda la tarjeta.
  */
 import type { CollectionEntry } from 'astro:content';
-import { brandBySlug, categoryBySlug } from '../data/site';
+import { brandBySlug, categoryBySlug, subcategoryBySlug } from '../data/site';
 
 interface Props {
   product: CollectionEntry<'products'>;
@@ -23,13 +23,15 @@ interface Props {
 }
 
 const { product, index, fit: fitProp } = Astro.props;
-const { title, brand, category, summary, image, tags, sku, specs, imageFit } = product.data;
+const { title, brand, category, subcategory, summary, image, tags, sku, specs, imageFit } = product.data;
 // La página puede forzar el ajuste; si no, manda el del producto (frontmatter `imageFit`).
 const fit = fitProp ?? imageFit;
 const brandName = brandBySlug(brand)?.name ?? brand;
 const categoryInfo = categoryBySlug(category);
 const categoryName = categoryInfo?.name ?? category;
-const categoryShort = categoryInfo?.shortName ?? categoryName; // pie en una línea
+const subName = subcategoryBySlug(category, subcategory)?.name ?? '';
+// Pie en una línea: la subcategoría dice más que la categoría (que ya filtra el segmentado).
+const footLabel = subName || (categoryInfo?.shortName ?? categoryName);
 const href = `/productos/${product.id}`;
 
 /** Misma normalización que el buscador del catálogo: minúsculas, sin tildes, espacios colapsados. */
@@ -43,7 +45,7 @@ const norm = (s: string) =>
 
 // Incluye los valores de la ficha (medidas, materiales, normas): "bola 1/2" encuentra la 40G.
 const search = norm(
-  [title, sku ?? '', brandName, categoryName, summary, ...tags, ...specs.map((s) => s.value)].join(' '),
+  [title, sku ?? '', brandName, categoryName, subName, summary, ...tags, ...specs.map((s) => s.value)].join(' '),
 );
 const eager = typeof index === 'number' && index < 6;
 ---
@@ -53,6 +55,7 @@ const eager = typeof index === 'number' && index < 6;
   data-product
   data-brand={brand}
   data-category={category}
+  data-subcategory={subcategory}
   data-search={search}
   data-fit={fit}
   style={typeof index === 'number' ? `--i: ${Math.min(index, 6)}` : undefined}
@@ -75,7 +78,7 @@ const eager = typeof index === 'number' && index < 6;
     {sku && <span class="product-card__sku">Ref. <span class="mono">{sku}</span></span>}
     <p>{summary}</p>
     <div class="product-card__foot">
-      <span class="product-card__cat">{categoryShort}</span>
+      <span class="product-card__cat">{footLabel}</span>
       <span class="product-card__more link link-chevron" aria-hidden="true">Ver producto</span>
     </div>
   </div>

@@ -2,6 +2,7 @@
 title: 'Válvulas aguja'
 brand: ferreinstrumentos
 category: valvulas
+subcategory: aguja
 summary: 'Válvulas de regulación fina para instrumentación, gases y fluidos de proceso.'
 image: '/images/ferreinstrumentos/valvulas-aguja.jpg'
 imageFit: contain

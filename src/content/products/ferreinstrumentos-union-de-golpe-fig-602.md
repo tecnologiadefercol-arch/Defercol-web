@@ -1,7 +1,8 @@
 ---
 title: 'Unión de golpe Fig. 602'
 brand: ferreinstrumentos
-category: uniones-de-golpe
+category: racores
+subcategory: uniones-de-golpe
 summary: 'Para servicios de agua, petróleo, gas y lodos hasta 6.000 psi, con empaque un reemplazable. Para soldar y roscar.'
 image: '/images/ferreinstrumentos/union-de-golpe-fig-602.jpg'
 imageFit: contain

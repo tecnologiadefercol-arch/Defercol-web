@@ -2,6 +2,7 @@
 title: 'Válvulas compuerta (Gate Valve Demco Style)'
 brand: ferreinstrumentos
 category: valvulas
+subcategory: compuerta-globo-macho
 summary: 'Válvulas de apertura total para operaciones de alta presión en perforación, completamiento y producción petrolera. Desde 2” a 4” x 5.000 PSI para soldar y roscadas.'
 image: '/images/ferreinstrumentos/valvulas-compuerta-gate-valve-demco-style.jpg'
 imageFit: contain

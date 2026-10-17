@@ -2,6 +2,7 @@
 title: 'Kit de reparación para Gate Valve'
 brand: ferreinstrumentos
 category: mantenimiento
+subcategory: repuestos
 summary: 'Componentes para mantenimiento preventivo y correctivo de válvulas compuerta de alta presión.'
 image: '/images/ferreinstrumentos/kit-de-reparacion-para-gate-valve.jpg'
 imageFit: contain

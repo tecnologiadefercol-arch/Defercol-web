@@ -2,6 +2,7 @@
 title: 'Desengrasante H7'
 brand: ferreinstrumentos
 category: mantenimiento
+subcategory: quimicos
 summary: 'Producto químico para limpieza y remoción de grasas industriales.'
 image: '/images/ferreinstrumentos/desengrasante-h7.jpg'
 imageFit: contain

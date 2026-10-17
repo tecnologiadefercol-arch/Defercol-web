@@ -1,7 +1,8 @@
 ---
 title: 'Ring Gasket (Oval Ring)'
 brand: ferreinstrumentos
-category: accesorios-tuberia
+category: tuberia
+subcategory: accesorios
 summary: 'Empaques metálicos RTJ para sellado de bridas en aplicaciones de alta presión y temperatura.'
 image: '/images/ferreinstrumentos/ring-gasket-oval-ring.jpg'
 imageFit: contain

@@ -2,6 +2,7 @@
 title: 'Válvulas bola flotante (Floating Ball Valves)'
 brand: ferreinstrumentos
 category: valvulas
+subcategory: bola
 summary: 'Válvulas de cierre rápido con esfera flotante para manejo de fluidos industriales y petroleros. En acero al carbón e inoxidable.'
 image: '/images/ferreinstrumentos/valvulas-bola-flotante-floating-ball-valves.jpg'
 imageFit: contain

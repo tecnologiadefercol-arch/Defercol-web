@@ -2,6 +2,7 @@
 title: 'Picas en bronce'
 brand: ferreinstrumentos
 category: herramientas
+subcategory: manuales
 summary: 'Herramientas antichispa para trabajos de excavación y mantenimiento en ambientes con presencia de gases o materiales inflamables.'
 image: '/images/ferreinstrumentos/picas-en-bronce.jpg'
 imageFit: contain

@@ -1,7 +1,8 @@
 ---
 title: 'Unión de golpe Fig. 1003'
 brand: ferreinstrumentos
-category: uniones-de-golpe
+category: racores
+subcategory: uniones-de-golpe
 summary: 'Para sistemas de alta presión donde se requiere compensar desalineaciones en la tubería. Para soldar.'
 image: '/images/ferreinstrumentos/union-de-golpe-fig-1003.jpg'
 imageFit: contain

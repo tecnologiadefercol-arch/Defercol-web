@@ -1,7 +1,8 @@
 ---
 title: 'Pup Joint'
 brand: ferreinstrumentos
-category: uniones-de-golpe
+category: racores
+subcategory: uniones-de-golpe
 summary: 'Tramo corto de tubería utilizado para ajuste de longitud en líneas de proceso. Fig 1502.'
 image: '/images/ferreinstrumentos/pup-joint.png'
 imageFit: contain

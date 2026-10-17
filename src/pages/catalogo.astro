@@ -1,5 +1,6 @@
 ---
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, statSync, readFileSync } from 'node:fs';
+import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
 import { getImage } from 'astro:assets';
 import heroStill from '../assets/film/stop-3@2x.webp';
@@ -21,7 +22,23 @@ const coverPath = '/catalogo/portada.webp';
 const coverExists = existsSync(new URL(`../../public${coverPath}`, import.meta.url));
 
 const year = new Date().getFullYear();
-const meta = ['PDF', 'Referencias por marca y categoría', pdfExists ? pdfSize : ''].filter(Boolean);
+
+// Datos del archivo real (lo genera `npm run catalogo`): páginas, fecha y contenido.
+const pdfPages = pdfExists ? (readFileSync(pdfFile).toString('latin1').match(/\/Type\s*\/Page\b/g)?.length ?? 0) : 0;
+const pdfDate = pdfExists
+  ? statSync(pdfFile).mtime.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })
+  : '';
+const productCount = (await getCollection('products')).length;
+const meta = pdfExists
+  ? ['PDF', pdfPages ? `${pdfPages} páginas` : '', 'Tamaño A4'].filter(Boolean)
+  : ['PDF', 'Referencias por marca y categoría'];
+const features = [
+  `${productCount} productos en ${categories.length} líneas, con foto y datos clave`,
+  'Índice y marcadores para saltar a cada línea y tipo de producto',
+  'Cada producto enlaza a su ficha en la web',
+  pdfDate ? `Actualizado el ${pdfDate}` : '',
+].filter(Boolean);
+const downloadName = `Catalogo-Defercol-${year}.pdf`;
 
 // Hero: cuadro de una parada del brand film; astro:assets genera las anchuras
 // intermedias para que un móvil no reciba el cuadro completo de 1920 px.
@@ -38,7 +55,7 @@ const hero = await getImage({
 
 <Layout
   title="Catálogo PDF"
-  description="Descarga el catálogo de productos de Defercol en PDF: racores, válvulas, tubería, reguladores e instrumentación industrial."
+  description="Descarga el catálogo de productos de Defercol en PDF: válvulas, racores, tubería, instrumentación, reguladores, filtración, herramientas y repuestos."
 >
   <section class="page-hero page-hero--image">
     <!-- Escena de tubería del brand film (parada 3), en 1x y 2x para pantallas retina. -->
@@ -66,7 +83,7 @@ const hero = await getImage({
       <figure class="doc" role="img" aria-label={`Vista previa de la portada del catálogo Defercol ${year}`}>
         {
           coverExists ? (
-            <img class="doc__image" src={coverPath} alt="" width="1240" height="1754" loading="lazy" decoding="async" />
+            <img class="doc__image" src={coverPath} alt="" width="1240" height="1754" loading="eager" decoding="async" />
           ) : (
             <div class="doc__page" aria-hidden="true">
               <div class="doc__band">
@@ -128,8 +145,12 @@ const hero = await getImage({
         <div class="download__actions">
           {
             pdfExists ? (
-              <a class="btn btn-primary" href={site.catalogPath} download>
+              <a class="btn btn-primary download__btn" href={site.catalogPath} download={downloadName}>
+                <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 4v11M7 10.5l5 5 5-5M5 20h14" />
+                </svg>
                 Descargar PDF
+                <span class="download__size">{pdfSize}</span>
               </a>
             ) : (
               <a
@@ -142,9 +163,34 @@ const hero = await getImage({
               </a>
             )
           }
-          <a class="btn btn-ghost" href="/productos">Ver en la web</a>
+          {pdfExists ? (
+            <a class="btn btn-ghost" href={site.catalogPath} target="_blank" rel="noopener">
+              Abrir en el navegador
+            </a>
+          ) : (
+            <a class="btn btn-ghost" href="/productos">Ver en la web</a>
+          )}
         </div>
+        {pdfExists && (
+          <p class="download__alt">
+            ¿Buscas algo puntual? <a class="link link-chevron" href="/productos">Busca en el catálogo web</a>
+          </p>
+        )}
         {!pdfExists && <p class="download__note muted">El PDF está en preparación. Te lo enviamos por WhatsApp.</p>}
+        {
+          pdfExists && (
+            <ul class="download__features">
+              {features.map((f) => (
+                <li>
+                  <svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 10.5l3.2 3L15 7" />
+                  </svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+          )
+        }
       </div>
 
       <div class="download__help">
@@ -374,6 +420,54 @@ const hero = await getImage({
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-3, 12px);
+  }
+
+  .download__btn svg {
+    width: 18px;
+    height: 18px;
+    flex: none;
+  }
+
+  .download__size {
+    margin-left: 2px;
+    padding-left: var(--space-2, 8px);
+    border-left: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+    font-weight: var(--weight-regular, 400);
+    opacity: 0.85;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .download__features {
+    list-style: none;
+    margin: var(--space-6, 32px) 0 0;
+    padding: var(--space-5, 24px) 0 0;
+    border-top: 1px solid var(--color-border);
+    display: grid;
+    gap: var(--space-3, 12px);
+  }
+
+  .download__features li {
+    display: flex;
+    gap: var(--space-3, 12px);
+    align-items: flex-start;
+    font-size: var(--text-sm, 0.9rem);
+    color: var(--color-text);
+  }
+
+  .download__features svg {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    padding: 3px;
+    border-radius: 50%;
+    background: var(--color-primary-soft, #e6ecf5);
+    color: var(--color-heading);
+  }
+
+  .download__alt {
+    margin: var(--space-4, 16px) 0 0;
+    font-size: var(--text-sm, 0.9rem);
+    color: var(--color-text-2);
   }
 
   .download__note {

@@ -2,6 +2,7 @@
 title: 'Choke Manifold'
 brand: ferreinstrumentos
 category: valvulas
+subcategory: manifolds
 summary: 'Sistema de control de presión utilizado en operaciones de perforación y control de pozos.'
 image: '/images/ferreinstrumentos/choke-manifold.jpg'
 imageFit: contain

@@ -1,7 +1,8 @@
 ---
 title: 'Unión de golpe Fig. 100'
 brand: ferreinstrumentos
-category: uniones-de-golpe
+category: racores
+subcategory: uniones-de-golpe
 summary: 'Para líneas de baja presión 1.000 psi de aire, agua, petróleo y gas. Sello metal-metal.'
 image: '/images/ferreinstrumentos/union-de-golpe-fig-100.jpg'
 imageFit: contain

@@ -2,6 +2,7 @@
 title: 'Manómetros'
 brand: ferreinstrumentos
 category: instrumentacion
+subcategory: manometros
 summary: 'Instrumentos para medición y monitoreo de presión en sistemas industriales.'
 image: '/images/ferreinstrumentos/manometros.jpg'
 imageFit: contain

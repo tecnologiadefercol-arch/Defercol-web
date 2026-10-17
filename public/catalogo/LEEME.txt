@@ -1,6 +1,14 @@
-Coloca aquí el catálogo en PDF con el nombre exacto:
+Esta carpeta la genera el comando:
 
-  catalogo-defercol.pdf
+  npm run catalogo
 
-El botón "Descargar catálogo" del sitio apunta a /catalogo/catalogo-defercol.pdf.
-Si cambias el nombre, actualiza "catalogPath" en src/data/site.ts.
+Produce dos archivos a partir de los productos del sitio (src/content/products)
+y del árbol de categorías (src/data/site.ts):
+
+  catalogo-defercol.pdf   el catálogo que descarga /catalogo
+  portada.webp            la vista previa de la portada en /catalogo
+
+No los edites a mano: vuelve a correr el comando cuando cambien productos,
+fotos, categorías o datos de contacto. Requiere Google Chrome instalado.
+Si "Descargar catálogo" debe apuntar a otro nombre, cambia "catalogPath"
+en src/data/site.ts.

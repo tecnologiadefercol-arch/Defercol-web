@@ -2,6 +2,7 @@
 title: 'Racores (conectores tipo Swagelok)'
 brand: ferreinstrumentos
 category: racores
+subcategory: racores-para-tubo
 summary: 'Conectores de compresión para aislar, regular y conducir fluidos en líneas de instrumentación de alta presión, con sellado hermético. Tamaños de 1/8" a 1".'
 image: '/images/ferreinstrumentos/racores-conectores-tipo-swagelok.jpg'
 imageFit: contain

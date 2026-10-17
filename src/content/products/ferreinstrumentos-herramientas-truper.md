@@ -2,6 +2,7 @@
 title: 'Herramientas Truper'
 brand: ferreinstrumentos
 category: herramientas
+subcategory: manuales
 summary: 'Línea de herramientas manuales y de mantenimiento para uso industrial.'
 image: '/images/ferreinstrumentos/herramientas-truper.jpg'
 imageFit: cover

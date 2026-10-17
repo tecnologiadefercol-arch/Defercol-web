@@ -1,7 +1,8 @@
 ---
 title: 'Codos'
 brand: ferreinstrumentos
-category: accesorios-tuberia
+category: tuberia
+subcategory: accesorios
 summary: 'En acero al carbono e inoxidable, disponibles desde SCH 40 hasta SCH XXS, para sistemas de conducción de fluidos en la industria petrolera e industrial.'
 image: '/images/ferreinstrumentos/codos.jpg'
 imageFit: contain

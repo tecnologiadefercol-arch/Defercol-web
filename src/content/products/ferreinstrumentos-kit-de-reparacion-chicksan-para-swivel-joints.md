@@ -2,6 +2,7 @@
 title: 'Kit de reparación Chicksan para Swivel Joints'
 brand: ferreinstrumentos
 category: mantenimiento
+subcategory: repuestos
 summary: 'Conjunto de sellos y repuestos para mantenimiento de juntas giratorias de alta presión.'
 image: '/images/ferreinstrumentos/kit-de-reparacion-chicksan-para-swivel-joints.jpg'
 imageFit: contain

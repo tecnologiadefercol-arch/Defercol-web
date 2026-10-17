@@ -26,12 +26,14 @@ const hero = await getImage({
 });
 
 const countBy = (key: 'brand' | 'category', slug: string) => products.filter((p) => p.data[key] === slug).length;
+const countSub = (cat: string, sub: string) =>
+  products.filter((p) => p.data.category === cat && p.data.subcategory === sub).length;
 const total = products.length;
 ---
 
 <Layout
   title="Productos"
-  description="Catálogo Defercol: racores, válvulas, tubería, reguladores e instrumentación Swagelok, Valveco, Comfit y Ferreinstrumentos. Filtra por marca y categoría y cotiza por WhatsApp."
+  description="Catálogo Defercol: válvulas, racores, tubería, instrumentación, reguladores, filtración, herramientas y repuestos Swagelok, Valveco, Comfit y Ferreinstrumentos. Filtra por categoría, tipo y marca y cotiza por WhatsApp."
 >
   <!-- Precarga del hero (elemento LCP): mismo srcset/sizes que el <img> para que se reutilice. -->
   <Fragment slot="head">
@@ -53,7 +55,7 @@ const total = products.length;
     <div class="container">
       <span class="eyebrow">Catálogo</span>
       <h1>Productos.</h1>
-      <p>Busca por referencia, filtra por marca y cotiza por WhatsApp.</p>
+      <p>Busca por referencia, filtra por categoría, tipo y marca, y cotiza por WhatsApp.</p>
     </div>
   </section>
 
@@ -89,6 +91,35 @@ const total = products.length;
                 <span class="seg__btn">{c.shortName}</span>
               </label>
             ))
+          }
+        </fieldset>
+
+        <!--
+          Segundo nivel del árbol: solo se ve con una categoría elegida y solo
+          muestra las subcategorías de esa categoría (los slugs se repiten entre
+          categorías, por eso cada opción lleva data-cat). Los números se
+          recalculan con la marca y la búsqueda activas.
+        -->
+        <fieldset class="subcats" id="subcats" hidden>
+          <legend class="visually-hidden">Tipo de producto</legend>
+          <label class="chip-opt">
+            <input type="radio" name="sub" value="" checked />
+            <span class="chip">Todos</span>
+          </label>
+          {
+            categories.flatMap((c) =>
+              c.subcategories.map((sc) => (
+                <label class="chip-opt" data-cat={c.slug} hidden>
+                  <input type="radio" name="sub" value={sc.slug} />
+                  <span class="chip">
+                    {sc.name}
+                    <span class="chip__n mono" data-n>
+                      {countSub(c.slug, sc.slug)}
+                    </span>
+                  </span>
+                </label>
+              )),
+            )
           }
         </fieldset>
 
@@ -223,6 +254,24 @@ const total = products.length;
             ))
           }
         </fieldset>
+        <fieldset class="sheet__group" data-sheet-subs hidden>
+          <legend>Tipo de producto</legend>
+          <label class="sheet__row">
+            <input type="radio" name="sub-m" value="" checked />
+            <span>Todos</span>
+          </label>
+          {
+            categories.flatMap((c) =>
+              c.subcategories.map((sc) => (
+                <label class="sheet__row" data-cat={c.slug} hidden>
+                  <input type="radio" name="sub-m" value={sc.slug} />
+                  <span>{sc.name}</span>
+                  <span class="sheet__n mono">{countSub(c.slug, sc.slug)}</span>
+                </label>
+              )),
+            )
+          }
+        </fieldset>
         <fieldset class="sheet__group">
           <legend>Marca</legend>
           {
@@ -244,9 +293,9 @@ const total = products.length;
 </Layout>
 
 <script>
-  import { brands, categories, whatsappLink } from '../../data/site';
+  import { brands, categories, legacyCategories, whatsappLink } from '../../data/site';
 
-  type State = { categoria: string; marca: string[]; q: string };
+  type State = { categoria: string; sub: string; marca: string[]; q: string };
 
   const norm = (s: string) =>
     s
@@ -258,6 +307,8 @@ const total = products.length;
 
   const brandName = (s: string) => brands.find((b) => b.slug === s)?.name ?? s;
   const catName = (s: string) => categories.find((c) => c.slug === s)?.name ?? s;
+  const subName = (cat: string, sub: string) =>
+    categories.find((c) => c.slug === cat)?.subcategories.find((x) => x.slug === sub)?.name ?? sub;
   const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Observadores de la visita actual; se desconectan antes de cada navegación.
@@ -284,11 +335,24 @@ const total = products.length;
     const clearAll = document.getElementById('clear-filters') as HTMLButtonElement;
     const sentinel = document.getElementById('catalog-sentinel')!;
     const sheet = document.getElementById('filters-sheet') as HTMLDialogElement | null;
+    const subcats = document.getElementById('subcats')!;
+    const subLabels = Array.from(subcats.querySelectorAll<HTMLLabelElement>('label[data-cat]'));
+
+    /** Marca la opción `sub` de la categoría `cat` ('' = Todos) en un formulario. */
+    const checkSub = (root: HTMLElement, name: string, cat: string, sub: string) => {
+      const sel = sub
+        ? `label[data-cat="${CSS.escape(cat)}"] input[name="${name}"][value="${CSS.escape(sub)}"]`
+        : `input[name="${name}"][value=""]`;
+      const el = root.querySelector<HTMLInputElement>(sel) ?? root.querySelector<HTMLInputElement>(`input[name="${name}"][value=""]`);
+      if (el) el.checked = true;
+    };
 
     const read = (): State => {
       const d = new FormData(form);
+      const categoria = String(d.get('categoria') ?? '');
       return {
-        categoria: String(d.get('categoria') ?? ''),
+        categoria,
+        sub: categoria ? String(d.get('sub') ?? '') : '',
         marca: d.getAll('marca').map(String),
         q: String(d.get('q') ?? '').slice(0, 80),
       };
@@ -296,12 +360,32 @@ const total = products.length;
 
     const matches = (card: HTMLElement, s: State, terms: string[]) =>
       (!s.categoria || card.dataset.category === s.categoria) &&
+      (!s.sub || card.dataset.subcategory === s.sub) &&
       (s.marca.length === 0 || s.marca.includes(card.dataset.brand ?? '')) &&
       terms.every((t) => (card.dataset.search ?? '').includes(t));
 
     const countFor = (s: State) => {
       const terms = norm(s.q).split(' ').filter(Boolean);
       return cards.reduce((n, c) => n + (matches(c, s, terms) ? 1 : 0), 0);
+    };
+
+    /** Fila de subcategorías: visible solo con categoría; los números siguen a la marca y la búsqueda. */
+    const renderSubcats = (s: State) => {
+      subcats.hidden = !s.categoria;
+      if (!s.categoria) return;
+      const terms = norm(s.q).split(' ').filter(Boolean);
+      const n: Record<string, number> = {};
+      cards.forEach((c) => {
+        if (matches(c, { ...s, sub: '' }, terms)) n[c.dataset.subcategory ?? ''] = (n[c.dataset.subcategory ?? ''] ?? 0) + 1;
+      });
+      subLabels.forEach((l) => {
+        const mine = l.dataset.cat === s.categoria;
+        l.hidden = !mine;
+        if (!mine) return;
+        const k = n[l.querySelector('input')!.value] ?? 0;
+        l.querySelector('[data-n]')!.textContent = String(k);
+        l.classList.toggle('is-empty', k === 0);
+      });
     };
 
     // 1) Filtrado: síncrono e inmediato.
@@ -314,12 +398,13 @@ const total = products.length;
         if (ok) li.style.setProperty('--i', String(visible++));
       });
       renderApplied(s);
+      renderSubcats(s);
       empty.hidden = true; // se muestra al terminar el debounce (sin parpadeo a mitad de palabra)
       clearQ.hidden = s.q === '';
-      const n = s.marca.length + (s.categoria ? 1 : 0);
+      const n = s.marca.length + (s.categoria ? 1 : 0) + (s.sub ? 1 : 0);
       openCount.hidden = n === 0;
       openCount.textContent = String(n);
-      clearAll.hidden = !(s.categoria || s.marca.length || s.q.trim());
+      clearAll.hidden = !(s.categoria || s.sub || s.marca.length || s.q.trim());
       return visible;
     };
 
@@ -336,6 +421,7 @@ const total = products.length;
 
         const p = new URLSearchParams();
         if (s.categoria) p.set('categoria', s.categoria);
+        if (s.sub) p.set('sub', s.sub);
         s.marca.forEach((m) => p.append('marca', m));
         if (s.q.trim()) p.set('q', s.q.trim());
         const qs = p.toString();
@@ -357,8 +443,11 @@ const total = products.length;
           label: catName(s.categoria),
           undo: () => {
             (form.querySelector('[name="categoria"][value=""]') as HTMLInputElement).checked = true;
+            checkSub(form, 'sub', '', '');
           },
         });
+      if (s.sub)
+        chips.push({ label: subName(s.categoria, s.sub), undo: () => checkSub(form, 'sub', '', '') });
       s.marca.forEach((m) =>
         chips.push({
           label: brandName(m),
@@ -399,7 +488,7 @@ const total = products.length;
       forEl.hidden = !what;
       qEl.textContent = what;
       const parts = [`Hola Defercol, busco: ${what || 'un producto'}`];
-      if (s.categoria) parts.push(`en ${catName(s.categoria)}`);
+      if (s.categoria) parts.push(`en ${s.sub ? subName(s.categoria, s.sub) : catName(s.categoria)}`);
       if (s.marca.length) parts.push(`de ${s.marca.map(brandName).join(', ')}`);
       (empty.querySelector('[data-empty-wa]') as HTMLAnchorElement).href = whatsappLink(
         `${parts.join(' ')}. ¿Lo manejan?`,
@@ -408,8 +497,14 @@ const total = products.length;
 
     // 3) Estado inicial desde la URL (compatible con ?categoria= y ?marca= del inicio y el pie).
     const params = new URLSearchParams(location.search);
-    const cat = params.getAll('categoria').find((c) => categories.some((x) => x.slug === c));
-    if (cat) (form.querySelector(`[name="categoria"][value="${CSS.escape(cat)}"]`) as HTMLInputElement).checked = true;
+    // Enlaces viejos: categorías que ahora son subcategorías (?categoria=uniones-de-golpe).
+    const rawCat = params.get('categoria') ?? '';
+    const legacy = legacyCategories[rawCat];
+    const cat = legacy?.category ?? (categories.some((x) => x.slug === rawCat) ? rawCat : '');
+    if (cat) {
+      (form.querySelector(`[name="categoria"][value="${CSS.escape(cat)}"]`) as HTMLInputElement).checked = true;
+      checkSub(form, 'sub', cat, legacy?.subcategory ?? params.get('sub') ?? '');
+    }
     for (const m of params.getAll('marca')) {
       const box = form.querySelector<HTMLInputElement>(`[name="marca"][value="${CSS.escape(m)}"]`);
       if (box) box.checked = true;
@@ -417,7 +512,11 @@ const total = products.length;
     q.value = (params.get('q') ?? '').slice(0, 80);
 
     // 4) Eventos
-    form.addEventListener('input', (e) => apply(e.target === q ? 250 : 60));
+    form.addEventListener('input', (e) => {
+      // Al cambiar de categoría, el tipo vuelve a "Todos" (los tipos son de cada categoría).
+      if ((e.target as HTMLInputElement).name === 'categoria') checkSub(form, 'sub', '', '');
+      apply(e.target === q ? 250 : 60);
+    });
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       apply(0);
@@ -461,21 +560,37 @@ const total = products.length;
 
       const readSheet = (): State => {
         const d = new FormData(sheetForm);
-        return { categoria: String(d.get('categoria-m') ?? ''), marca: d.getAll('marca-m').map(String), q: q.value };
+        const categoria = String(d.get('categoria-m') ?? '');
+        return {
+          categoria,
+          sub: categoria ? String(d.get('sub-m') ?? '') : '',
+          marca: d.getAll('marca-m').map(String),
+          q: q.value,
+        };
       };
       const setChecked = (root: HTMLElement, name: string, values: string[]) => {
         root.querySelectorAll<HTMLInputElement>(`[name="${name}"]`).forEach((el) => {
           el.checked = values.includes(el.value);
         });
       };
+      const sheetSubs = sheet.querySelector<HTMLFieldSetElement>('[data-sheet-subs]')!;
+      const sheetSubRows = Array.from(sheetSubs.querySelectorAll<HTMLLabelElement>('label[data-cat]'));
+      const renderSheetSubs = () => {
+        const cat = readSheet().categoria;
+        sheetSubs.hidden = !cat;
+        sheetSubRows.forEach((l) => (l.hidden = l.dataset.cat !== cat));
+      };
       const syncToSheet = () => {
         const s = read();
         setChecked(sheetForm, 'categoria-m', [s.categoria]);
+        checkSub(sheetForm, 'sub-m', s.categoria, s.sub);
         setChecked(sheetForm, 'marca-m', s.marca);
+        renderSheetSubs();
       };
       const syncToBar = () => {
         const s = readSheet();
         setChecked(form, 'categoria', [s.categoria]);
+        checkSub(form, 'sub', s.categoria, s.sub);
         setChecked(form, 'marca', s.marca);
       };
       const updateApplyBtn = () => {
@@ -493,10 +608,16 @@ const total = products.length;
         document.documentElement.style.overflow = 'hidden'; // respaldo de html:has(dialog[open])
         sheetForm.querySelector<HTMLInputElement>('[name="categoria-m"]:checked')?.focus();
       });
-      sheetForm.addEventListener('input', updateApplyBtn);
+      sheetForm.addEventListener('input', (e) => {
+        if ((e.target as HTMLInputElement).name === 'categoria-m') checkSub(sheetForm, 'sub-m', '', '');
+        renderSheetSubs();
+        updateApplyBtn();
+      });
       sheet.querySelector('[data-sheet-reset]')!.addEventListener('click', () => {
         setChecked(sheetForm, 'categoria-m', ['']);
+        checkSub(sheetForm, 'sub-m', '', '');
         setChecked(sheetForm, 'marca-m', []);
+        renderSheetSubs();
         updateApplyBtn();
       });
       // Tocar el fondo (::backdrop) cierra sin aplicar.
@@ -694,6 +815,43 @@ const total = products.length;
   .chip-opt:active .chip {
     transform: scale(0.97);
     transition-duration: var(--dur-instant);
+  }
+
+  /* ---- Subcategorías (radios con aspecto de chip; segundo nivel bajo el segmentado) ---- */
+  .subcats {
+    display: flex;
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-inline-size: 0;
+  }
+
+  .subcats[hidden],
+  .subcats .chip-opt[hidden] {
+    display: none;
+  }
+
+  .subcats .chip {
+    gap: 6px;
+    background: var(--color-surface-2);
+    border-color: transparent;
+  }
+
+  .chip__n {
+    font-size: var(--text-xs, 0.75rem);
+    color: var(--color-text-2);
+  }
+
+  .subcats input:checked + .chip .chip__n {
+    color: inherit;
+    opacity: 0.8;
+  }
+
+  .subcats .chip-opt.is-empty .chip {
+    opacity: 0.45;
   }
 
   /* ---- Búsqueda ---- */
@@ -1033,6 +1191,11 @@ const total = products.length;
     border-bottom: 0;
   }
 
+  .sheet__row[hidden],
+  .sheet__group[hidden] {
+    display: none;
+  }
+
   .sheet__row input {
     width: 20px;
     height: 20px;
@@ -1085,6 +1248,28 @@ const total = products.length;
 
     .chips {
       display: none; /* las marcas viven en la hoja */
+    }
+
+    /* Una línea desplazable bajo el segmentado; pegada, se recoge igual que él. */
+    .subcats {
+      order: 3;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      scroll-snap-type: x proximity;
+    }
+
+    .subcats::-webkit-scrollbar {
+      display: none;
+    }
+
+    .subcats .chip-opt {
+      flex: none;
+      scroll-snap-align: start;
+    }
+
+    .catalog-bar.is-stuck .subcats {
+      display: none;
     }
 
     .search {

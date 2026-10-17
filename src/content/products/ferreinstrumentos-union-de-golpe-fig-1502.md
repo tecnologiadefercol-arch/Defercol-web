@@ -1,7 +1,8 @@
 ---
 title: 'Unión de golpe Fig. 1502'
 brand: ferreinstrumentos
-category: uniones-de-golpe
+category: racores
+subcategory: uniones-de-golpe
 summary: 'Estándar de la industria para cementación, acidificación, fracturamiento y líneas de choke & kill hasta 15.000 psi. Para soldar y roscar.'
 image: '/images/ferreinstrumentos/union-de-golpe-fig-1502.jpg'
 imageFit: contain

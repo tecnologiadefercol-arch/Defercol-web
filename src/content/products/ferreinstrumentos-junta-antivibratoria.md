@@ -1,7 +1,8 @@
 ---
 title: 'Junta antivibratoria'
 brand: ferreinstrumentos
-category: accesorios-tuberia
+category: tuberia
+subcategory: accesorios
 summary: 'Elementos flexibles bridados, diseñados para absorber vibraciones, movimientos y dilataciones en tuberías. En EPDM y BUNA.'
 image: '/images/ferreinstrumentos/junta-antivibratoria.jpg'
 imageFit: contain
