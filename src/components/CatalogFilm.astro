@@ -4,9 +4,10 @@
  *
  * El brand film queda fijo de fondo durante todo el scroll. Cinco "paradas"
  * (hero, racores, válvulas, tubería, planta completa) unidas por cuatro clips:
- * entre parada y parada la cámara avanza al ritmo del scroll; en cada parada la
- * cámara se detiene y el contenido real de la página (líneas de producto,
- * destacados, razones, contacto) aparece sobre un panel de cristal.
+ * la cámara arranca cuando el panel de una parada va saliendo, persigue al
+ * scroll y frena mientras entra el siguiente; en cada parada la cámara se
+ * detiene y el contenido real de la página (líneas de producto, destacados,
+ * razones, contacto) aparece sobre un panel de cristal.
  *
  * Uso:
  *   <CatalogFilm>
@@ -15,9 +16,13 @@
  *     <Fragment slot="stop-4">…</Fragment>
  *   </CatalogFilm>
  *
- * Assets en public/videos/catalogo/:
- *   clip-k.mp4    1080p, keyframe cada 6 cuadros (scrub fluido en escritorio)
- *   clip-k-m.mp4  720p, keyframe cada 4 cuadros (móvil)
+ * Assets en public/videos/catalogo/ (clips de 10 s a 24 cuadros/s, sin cuadros B):
+ *   clip-k.mp4    1080p, cuadro clave cada 8 (escritorio)
+ *   clip-k-m.mp4  720p, cuadro clave cada 6 (móvil y tableta en horizontal)
+ *   clip-k-v.mp4  608×1080, recorte vertical de clip-k.mp4 que sigue el `focus`
+ *                 de sus dos paradas (teléfono en vertical; ~3,9 MB). Se genera
+ *                 con scripts/film/recorte-vertical.swift: si cambia un `focus`,
+ *                 hay que regenerarlo.
  *   stop-k.webp   cuadro real del film en cada parada, extraído del máster 4K
  *   stop-k@2x.webp  el mismo cuadro a 3840 px para pantallas retina (srcset)
  *
@@ -124,6 +129,7 @@ const stops: Stop[] = [
 const clips = [1, 2, 3, 4].map((k) => ({
   src: `${base}/clip-${k}.mp4`,
   mobile: `${base}/clip-${k}-m.mp4`,
+  portrait: `${base}/clip-${k}-v.mp4`,
 }));
 
 const config = { clips, focus: stops.map((s) => s.focus) };
@@ -255,6 +261,10 @@ const config = { clips, focus: stops.map((s) => s.focus) };
   .film {
     position: relative;
     isolation: isolate;
+    /* El velo del hero se sale 40 % por la derecha: sin recorte, en móvil la
+       página se ensanchaba (517 px en 390) y se movía de lado. clip y no hidden:
+       hidden haría del film un contenedor de scroll y rompería el sticky. */
+    overflow-x: clip;
     background: var(--navy-900);
     color: var(--color-text);
     --glass-shift: 0; /* -1..1, lo mueve el script con el scroll: la luz "resbala" */
@@ -312,6 +322,12 @@ const config = { clips, focus: stops.map((s) => s.focus) };
     will-change: opacity;
   }
 
+  /* El clip aparece y se va en sus extremos, donde su cuadro coincide con la
+     foto de la parada; el fundido corto solo disimula un salto de varios tramos. */
+  .film__clip {
+    transition: opacity 140ms linear;
+  }
+
   .film__clip :global(video) {
     display: block;
   }
@@ -322,11 +338,12 @@ const config = { clips, focus: stops.map((s) => s.focus) };
     z-index: 1;
   }
 
-  /* Hueco entre paradas: la pantalla completa (donde el panel anterior ya salió)
-     más el recorrido de scroll durante el que vuela la cámara. */
+  /* Hueco entre paradas: la pantalla completa (dos paneles nunca coinciden) más
+     el tramo en que solo se ve la cámara. La cámara además vuela mientras los
+     paneles salen y entran (LEAD en el script), así que este tramo es corto. */
   .film__gap {
-    height: calc(100vh + 130vh);
-    height: calc(100svh + 130vh);
+    height: calc(100vh + 50vh);
+    height: calc(100svh + 50vh);
     pointer-events: none;
   }
 
@@ -341,7 +358,6 @@ const config = { clips, focus: stops.map((s) => s.focus) };
     min-height: calc(100vh - var(--header-h));
     min-height: calc(100svh - var(--header-h));
     padding-block: 0 0;
-    margin-bottom: 20vh; /* pausa antes de que la cámara arranque */
   }
 
   /* La última parada llena la pantalla para que el fondo siga fijo hasta el final. */
@@ -759,14 +775,13 @@ const config = { clips, focus: stops.map((s) => s.focus) };
     }
 
     .film__gap {
-      height: calc(100vh + 110vh);
-      height: calc(100svh + 110vh);
+      height: calc(100vh + 40vh);
+      height: calc(100svh + 40vh);
     }
 
     .film__stop--hero {
       align-items: flex-end;
       padding-bottom: calc(84px + env(safe-area-inset-bottom)); /* libra el botón flotante de WhatsApp */
-      margin-bottom: 15vh;
     }
 
     .film__panel {
@@ -818,23 +833,25 @@ const config = { clips, focus: stops.map((s) => s.focus) };
 </style>
 
 <script>
-  type Config = { clips: { src: string; mobile: string }[]; focus: string[] };
+  type Variant = 'src' | 'mobile' | 'portrait';
+  type Config = { clips: Record<Variant, string>[]; focus: string[] };
 
-  type Layer = {
+  type Clip = {
     el: HTMLElement;
     start: number; // px de scroll
     end: number;
-    /** Índice de la parada (capas de imagen). */
-    still?: number;
     video?: HTMLVideoElement;
-    src?: string;
+    src: string;
     loading?: boolean;
     ready?: boolean;
-    cur: number;
+    /** Progreso pedido por el scroll, 0..1. */
     target: number;
-    visible: boolean;
-    fromFocus?: string;
-    toFocus?: string;
+    /** El clip se está reproduciendo hacia su objetivo. */
+    playing?: boolean;
+    /** false si el navegador negó play() (ahorro de batería en iOS): solo búsqueda. */
+    canPlay?: boolean;
+    fromFocus: string;
+    toFocus: string;
   };
 
   /**
@@ -918,7 +935,12 @@ const config = { clips, focus: stops.map((s) => s.focus) };
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const coarse = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
     const smallMQ = window.matchMedia('(max-width: 860px)');
+    const portraitMQ = window.matchMedia('(orientation: portrait)');
     const isMobile = () => coarse || smallMQ.matches;
+    // Teléfono en vertical: recorte 608×1080 (la franja que se ve, más nítida y
+    // la mitad de peso); móvil en horizontal o tableta: 720p; escritorio: 1080p.
+    const variant = (): Variant => (!isMobile() ? 'src' : portraitMQ.matches ? 'portrait' : 'mobile');
+    let clipVariant = variant();
     // Sin vídeo (las paradas se funden entre sí): movimiento reducido, ahorro de
     // datos o conexión 2g. Los clips pesan 7–13 MB cada uno.
     const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } })
@@ -932,33 +954,39 @@ const config = { clips, focus: stops.map((s) => s.focus) };
       return x * x * (3 - 2 * x);
     };
 
-    // Capas: imagen por parada y vídeo por tramo. Los rangos (en px de scroll)
-    // se calculan desde el DOM en layout().
-    const stopLayers: Layer[] = stills.map((el, i) => ({ el, still: i, start: 0, end: 0, cur: 0, target: 0, visible: false }));
-    const clipLayers: Layer[] = clipHosts.map((el, k) => ({
+    // Un clip por tramo, entre la foto de la parada k y la de k + 1. Los rangos
+    // (en px de scroll) se calculan desde el DOM en layout().
+    const clipLayers: Clip[] = clipHosts.map((el, k) => ({
       el,
       start: 0,
       end: 0,
-      src: isMobile() ? config.clips[k].mobile : config.clips[k].src,
-      cur: 0,
+      src: config.clips[k][clipVariant],
       target: 0,
-      visible: false,
       fromFocus: config.focus[k],
       toFocus: config.focus[k + 1],
     }));
-    // Orden intercalado: parada0, clip1, parada1, clip2, …
-    const layers: Layer[] = [];
-    stopLayers.forEach((s, i) => {
-      layers.push(s);
-      if (clipLayers[i]) layers.push(clipLayers[i]);
-    });
+
+    // Ritmo: la cámara arranca cuando el borde inferior del panel que sale
+    // cruza el LEAD de la pantalla (contado desde arriba) y frena cuando el
+    // borde superior del que entra sube a 1 − LEAD.
+    const LEAD = 0.45;
+    // Persecución: hacia adelante el clip se reproduce a GAIN × la distancia
+    // (en segundos de video), entre MIN_RATE y MAX_RATE: acelera tras un gesto
+    // rápido y frena al llegar. Hacia atrás busca, con el mismo tope.
+    const FRAME = 1 / 24;
+    const GAIN = 2;
+    const MIN_RATE = 0.5;
+    const MAX_RATE = 4;
 
     let headerH = 72;
     let stageH = 0;
     let trackTop = 0;
     let trackH = 0;
     let active = -1;
-    let ticking = false;
+    let dirty = false;
+    let lastNow = 0;
+    /** Tramo más cercano al scroll: el único cuya cámara se ve moverse. */
+    let owner = 0;
     let laidOutW = window.innerWidth;
     let fadePx = 60;
     let filmVisible = true; // lo decide rootIO: fuera de pantalla no hay scroll ni rAF que atender
@@ -974,25 +1002,30 @@ const config = { clips, focus: stops.map((s) => s.focus) };
       headerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72;
       stageH = stage.getBoundingClientRect().height || window.innerHeight - headerH;
       laidOutW = window.innerWidth;
+      // Al girar el teléfono cambia el recorte que hace falta: los clips se
+      // vuelven a pedir en la variante nueva cuando haga falta verlos.
+      const v = variant();
+      if (v !== clipVariant) {
+        clipVariant = v;
+        clipLayers.forEach((l, k) => {
+          unloadClip(l);
+          l.src = config.clips[k][v];
+        });
+      }
       trackTop = docTop(root);
       trackH = root.getBoundingClientRect().height;
       fadePx = Math.max(40, stageH * 0.08);
 
-      // Un clip se reproduce solo cuando el panel anterior ya salió por arriba y
-      // antes de que el siguiente asome por abajo: desde que el hueco ocupa toda
-      // la pantalla hasta que su borde inferior llega al pie de la pantalla. Así,
-      // mientras un panel está a la vista, el fondo es siempre la imagen nítida.
+      // El clip k corre desde que el borde superior de su hueco (el pie de la
+      // parada que sale) está a LEAD de pantalla bajo la cabecera, hasta que el
+      // borde inferior (la cabeza de la parada que entra) sube a 1 − LEAD. Con
+      // un panel ocupando la mayor parte de la pantalla, el fondo es la foto.
+      const lead = stageH * LEAD;
       gapEls.forEach((g, k) => {
         const top = docTop(g);
         const h = g.getBoundingClientRect().height;
-        clipLayers[k].start = top - headerH;
-        clipLayers[k].end = Math.max(clipLayers[k].start + 1, top + h - headerH - stageH);
-      });
-      // La imagen de una parada cubre desde el final del clip anterior hasta el
-      // inicio del siguiente.
-      stopLayers.forEach((s, i) => {
-        s.start = i === 0 ? -1e9 : clipLayers[i - 1].end;
-        s.end = i === N - 1 ? 1e9 : clipLayers[i].start;
+        clipLayers[k].start = top - headerH - lead;
+        clipLayers[k].end = Math.max(clipLayers[k].start + 1, top + h - headerH - stageH + lead);
       });
       stopEls.forEach((s, i) => {
         stopTops[i] = docTop(s);
@@ -1010,7 +1043,7 @@ const config = { clips, focus: stops.map((s) => s.focus) };
     // ---- imágenes de parada: solo la primera viene con src en el HTML (es el
     // LCP). Las demás se hidratan desde data-src cuando van a hacer falta: la 1
     // con el clip 1 o el primer scroll, las siguientes un tramo antes (gapIO) o,
-    // como red de seguridad, en cuanto read() les da opacidad.
+    // como red de seguridad, en cuanto render() las pone de fondo.
     const hydrated = stills.map((img) => img.hasAttribute('src'));
     function hydrateStill(i: number) {
       if (i < 0 || i >= N || hydrated[i]) return;
@@ -1025,8 +1058,8 @@ const config = { clips, focus: stops.map((s) => s.focus) };
     // ---- clips: carga progresiva por URL (preload=auto). El vídeo sirve con
     // los primeros cientos de KB (canplay), no al último byte; la caché HTTP
     // cubre las vueltas al inicio con View Transitions.
-    function loadClip(l: Layer | undefined) {
-      if (!l || noVideo || l.loading || !l.src || destroyed) return;
+    function loadClip(l: Clip | undefined) {
+      if (!l || noVideo || l.loading || destroyed) return;
       l.loading = true;
       const v = document.createElement('video');
       v.muted = true;
@@ -1036,7 +1069,7 @@ const config = { clips, focus: stops.map((s) => s.focus) };
       v.setAttribute('playsinline', '');
       v.setAttribute('aria-hidden', 'true');
       const onReady = () => {
-        if (l.ready || destroyed) return;
+        if (l.ready || destroyed || l.video !== v) return;
         l.ready = true;
         if (l === clipLayers[0]) {
           setLoading(false);
@@ -1047,22 +1080,41 @@ const config = { clips, focus: stops.map((s) => s.focus) };
       };
       v.addEventListener('canplay', onReady, { once: true });
       v.addEventListener('loadeddata', () => {
+        if (l.playing) return;
         try {
           v.pause();
         } catch {
           /* noop */
         }
-        if (userReady) prime(v);
+        if (userReady) prime(l);
       });
       v.addEventListener('error', () => {
+        if (l.video !== v) return;
         // Sin vídeo en este tramo: queda el fundido entre las dos imágenes.
         l.ready = false;
+        l.playing = false;
         l.video = undefined;
         v.remove();
+        setOpacity(l.el, 0);
+        dirty = true;
+        kick();
       });
       v.src = l.src;
       l.el.appendChild(v);
       l.video = v;
+    }
+
+    // Suelta el video (y su descarga); loadClip lo puede volver a cargar.
+    function unloadClip(l: Clip) {
+      l.loading = false;
+      l.ready = false;
+      l.playing = false;
+      setOpacity(l.el, 0);
+      if (!l.video) return;
+      l.video.removeAttribute('src');
+      l.video.load();
+      l.video.remove();
+      l.video = undefined;
     }
 
     // Clip 1: al primer scroll o, si el visitante no se mueve, cuando la página
@@ -1113,12 +1165,24 @@ const config = { clips, focus: stops.map((s) => s.focus) };
       return `${x.toFixed(1)}% ${y.toFixed(1)}%`;
     }
 
+    // Escrituras de estilo solo cuando el valor cambia: render() corre por
+    // frame mientras la cámara se mueve.
+    const written = new WeakMap<HTMLElement, string>();
+    function setOpacity(el: HTMLElement, op: number) {
+      const s = op.toFixed(3);
+      if (written.get(el) === s) return;
+      written.set(el, s);
+      el.style.opacity = s;
+    }
+
     // La luz del cristal se escribe en el panel activo (no en todo el film),
     // cuantizada a 1/50 y solo cuando cambia: sin recálculo de estilo por frame.
     let shiftEl: HTMLElement | null = null;
     let lastShift = NaN;
 
+    // Todo lo que depende de la posición del scroll; lo visual va en render().
     function read() {
+      dirty = false;
       const y = window.scrollY || window.pageYOffset;
       if (!scrolledOnce && y > 8) {
         scrolledOnce = true;
@@ -1126,47 +1190,18 @@ const config = { clips, focus: stops.map((s) => s.focus) };
         if (!clipLayers[0]?.ready) setLoading(true);
       }
 
-      let ci = 0;
-      layers.forEach((l, i) => {
-        if (y >= l.start) ci = i;
-      });
-      layers.forEach((l, i) => {
-        const local = clamp((y - l.start) / Math.max(1, l.end - l.start));
-        l.target = local;
-        let outside = 0;
-        if (y < l.start) outside = l.start - y;
-        else if (y > l.end) outside = y - l.end;
-        const op = smooth(1 - outside / fadePx);
-        if (op > 0) {
-          // Red de seguridad (saltos del riel, carga con #ancla): lo que se ve, se carga.
-          if (l.src) loadClip(l);
-          else if (l.still !== undefined) hydrateStill(l.still);
-        }
-        const show = l.src ? (l.ready ? op : 0) : op;
-        l.el.style.opacity = show.toFixed(3);
-        l.visible = show > 0.001;
-        l.el.style.zIndex = i === ci ? '20' : String(10 + Math.round(op * 5));
-        if (l.src && l.video && l.fromFocus && l.toFocus && isMobile()) {
-          l.video.style.objectPosition = lerpFocus(l.fromFocus, l.toFocus, local);
+      // Tramo dueño: el más cercano al scroll (dentro de él, distancia 0).
+      let dist = Infinity;
+      clipLayers.forEach((l, k) => {
+        l.target = clamp((y - l.start) / Math.max(1, l.end - l.start));
+        const d = y < l.start ? l.start - y : y > l.end ? y - l.end : 0;
+        if (d < dist) {
+          dist = d;
+          owner = k;
         }
       });
-
-      // Clip activo sin vídeo listo: fundir entre las imágenes vecinas.
-      const cur = layers[ci];
-      if (cur.src && !cur.ready) {
-        const p = clamp((y - cur.start) / Math.max(1, cur.end - cur.start));
-        const prev = layers[ci - 1];
-        const next = layers[ci + 1];
-        if (prev) {
-          prev.el.style.opacity = String(p < 0.5 ? 1 : smooth(1 - (p - 0.5) / 0.15));
-          prev.el.style.zIndex = p < 0.5 ? '21' : '19';
-        }
-        if (next) {
-          if (next.still !== undefined) hydrateStill(next.still);
-          next.el.style.opacity = String(p >= 0.5 ? 1 : smooth(1 - (0.5 - p) / 0.15));
-          next.el.style.zIndex = p >= 0.5 ? '21' : '19';
-        }
-      }
+      // Red de seguridad (saltos del riel, carga con #ancla): lo que se ve, se carga.
+      if (dist < fadePx) loadClip(clipLayers[owner]);
 
       // Parada activa: la sección más cercana al centro de la pantalla (geometría cacheada).
       const center = y + headerH + stageH / 2;
@@ -1203,48 +1238,139 @@ const config = { clips, focus: stops.map((s) => s.focus) };
 
       progress.style.transform = `scaleX(${clamp((y - trackTop) / Math.max(1, trackH - stageH))})`;
       if (hint) hint.style.opacity = String(clamp(1 - y / (stageH * 0.4)));
-      ticking = false;
     }
 
-    // rAF solo mientras haya un vídeo que acercar a su objetivo; en reposo, nada.
-    function raf() {
-      rafId = 0;
-      const eps = isMobile() ? 0.02 : 0.006;
+    // ---- cámara: el clip persigue al scroll ----
+    // Hacia adelante se reproduce: el decodificador avanza en secuencia, que en
+    // móvil es fluido, mientras que buscar cuadro a cuadro se traba (cada
+    // búsqueda decodifica desde el último cuadro clave y puede pedir red). La
+    // velocidad es proporcional a lo que falta, así que tras un gesto rápido la
+    // cámara acelera y frena al llegar. Hacia atrás no hay reproducción en
+    // reversa: busca, con el mismo tope de velocidad. Solo el tramo dueño se
+    // mueve a la vista; los demás saltan a su extremo sin mostrarse.
+    function startPlay(l: Clip) {
+      const v = l.video!;
+      const p = v.play();
+      if (!p) return;
+      p.then(
+        () => {
+          if (!l.playing) v.pause();
+        },
+        (e: DOMException) => {
+          // AbortError es un pause() que llegó antes; NotAllowedError, play() negado.
+          if (e.name !== 'NotAllowedError') return;
+          l.canPlay = false;
+          l.playing = false;
+          kick();
+        },
+      );
+    }
+
+    function stopPlay(l: Clip) {
+      if (!l.playing) return;
+      l.playing = false;
+      if (!l.video!.paused) l.video!.pause();
+    }
+
+    /** Acerca el clip a su objetivo; true mientras siga en movimiento. */
+    function follow(l: Clip, dt: number, isOwner: boolean): boolean {
+      const v = l.video!;
+      const dur = v.duration || 10;
+      const want = l.target * dur;
+      const at = v.currentTime;
+      const diff = want - at;
+
+      if (!isOwner) {
+        stopPlay(l);
+        if (!v.seeking && Math.abs(diff) > FRAME / 2) v.currentTime = want;
+        return v.seeking;
+      }
+
+      // Histéresis: arranca con dos cuadros de distancia y sigue hasta un cuarto.
+      const ahead = l.playing ? diff > FRAME / 4 : diff > FRAME * 2;
+      if (ahead && l.canPlay !== false) {
+        const rate = clamp(Math.round(diff * GAIN * 4) / 4, MIN_RATE, MAX_RATE);
+        if (v.playbackRate !== rate) v.playbackRate = rate;
+        l.playing = true;
+        if (v.paused) startPlay(l);
+        return true;
+      }
+      stopPlay(l);
+      if (Math.abs(diff) <= FRAME / 2) return v.seeking;
+      if (v.seeking) return true;
+      const step = Math.min(Math.abs(diff), Math.max(FRAME, Math.abs(diff) * 0.3), MAX_RATE * dt + FRAME);
+      v.currentTime = at + Math.sign(diff) * step;
+      return true;
+    }
+
+    // Qué se ve: el clip dueño mientras su cámara está entre los dos extremos
+    // (sus cuadros extremos son las fotos de las paradas, así que entra y sale
+    // sin salto) y, debajo, la foto de la parada de la que sale o a la que llega.
+    // Sin video listo, la foto siguiente se funde sobre la anterior a mitad del tramo.
+    let lastFocus = '';
+    function render(dt: number): boolean {
       let busy = false;
-      clipLayers.forEach((l) => {
-        const v = l.video;
-        if (!v || !l.ready) return;
-        if (v.seeking) {
-          busy = true;
-          return;
-        }
-        if (Math.abs(l.cur - l.target) < 0.002) return;
-        busy = true;
-        l.cur += (l.target - l.cur) * (reduce ? 1 : 0.22);
-        if (!l.visible) l.cur = l.target; // fuera de pantalla no hace falta suavizar
-        const dur = v.duration || 1;
-        const t = clamp(l.cur, 0, 0.999) * dur;
-        if (Math.abs(v.currentTime - t) > eps) {
-          try {
-            v.currentTime = t;
-          } catch {
-            /* noop */
+      clipLayers.forEach((l, k) => {
+        if (!l.video || !l.ready) return;
+        if (follow(l, dt, k === owner)) busy = true;
+        if (k !== owner) setOpacity(l.el, 0);
+      });
+
+      const o = clipLayers[owner];
+      let base = owner;
+      let over = -1;
+      let overOp = 0;
+      if (o && o.video && o.ready) {
+        const dur = o.video.duration || 10;
+        const at = o.video.currentTime;
+        setOpacity(o.el, at > FRAME / 2 && at < dur - FRAME / 2 ? 1 : 0);
+        const p = clamp(at / dur);
+        if (p >= 0.5) base = owner + 1;
+        if (isMobile()) {
+          let f = lerpFocus(o.fromFocus, o.toFocus, p);
+          // El clip vertical ya trae el desplazamiento horizontal del encuadre.
+          if (clipVariant === 'portrait') f = `50% ${f.split(' ')[1]}`;
+          if (f !== lastFocus) {
+            lastFocus = f;
+            o.video.style.objectPosition = f;
           }
         }
+      } else if (o) {
+        over = owner + 1;
+        overOp = smooth((o.target - 0.425) / 0.15);
+      }
+      // La foto siguiente queda después en el DOM: se funde por encima de la anterior.
+      stills.forEach((img, i) => {
+        const op = i === base ? 1 : i === over ? overOp : 0;
+        if (op > 0) hydrateStill(i);
+        setOpacity(img, op);
       });
-      if (busy && filmVisible && !destroyed) rafId = requestAnimationFrame(raf);
+      return busy;
+    }
+
+    // Un solo rAF: lee el scroll si cambió y mueve la cámara. Corre solo
+    // mientras haya un clip en movimiento; en reposo, nada.
+    function frame(now: number) {
+      rafId = 0;
+      const dt = lastNow ? Math.min(0.1, (now - lastNow) / 1000) : 1 / 60;
+      lastNow = now;
+      if (dirty) read();
+      const busy = render(dt);
+      if (busy && filmVisible && !destroyed) rafId = requestAnimationFrame(frame);
+      else lastNow = 0;
     }
     function kick() {
-      if (!rafId && filmVisible && !destroyed) rafId = requestAnimationFrame(raf);
+      if (!rafId && filmVisible && !destroyed) rafId = requestAnimationFrame(frame);
     }
 
     // iOS necesita un gesto antes de pintar un vídeo silenciado: play→pause.
     let userReady = false;
-    function prime(v: HTMLVideoElement) {
-      if (!isMobile()) return;
+    function prime(l: Clip) {
+      const v = l.video;
+      if (!v || !isMobile() || l.playing) return;
       try {
         const p = v.play();
-        if (p && p.then) p.then(() => v.pause()).catch(() => {});
+        if (p && p.then) p.then(() => !l.playing && v.pause()).catch(() => {});
       } catch {
         /* noop */
       }
@@ -1252,7 +1378,7 @@ const config = { clips, focus: stops.map((s) => s.focus) };
     function onFirstGesture() {
       if (userReady) return;
       userReady = true;
-      clipLayers.forEach((l) => l.video && prime(l.video));
+      clipLayers.forEach(prime);
     }
     window.addEventListener('pointerdown', onFirstGesture, { ...sig, once: true });
     window.addEventListener('touchstart', onFirstGesture, { ...sig, once: true });
@@ -1295,9 +1421,11 @@ const config = { clips, focus: stops.map((s) => s.focus) };
           if (filmVisible) {
             read();
             kick();
-          } else if (rafId) {
+          } else {
             cancelAnimationFrame(rafId);
             rafId = 0;
+            lastNow = 0;
+            clipLayers.forEach((l) => l.video && stopPlay(l));
           }
         },
         { threshold: 0 },
@@ -1323,10 +1451,7 @@ const config = { clips, focus: stops.map((s) => s.focus) };
       'scroll',
       () => {
         if (!filmVisible) return;
-        if (!ticking) {
-          ticking = true;
-          requestAnimationFrame(read);
-        }
+        dirty = true;
         kick();
       },
       sig,
@@ -1361,14 +1486,7 @@ const config = { clips, focus: stops.map((s) => s.focus) };
       ro?.disconnect();
       clearTimeout(loadingTimer);
       clearTimeout(firstTimer);
-      clipLayers.forEach((l) => {
-        if (l.video) {
-          l.video.removeAttribute('src');
-          l.video.load();
-          l.video.remove();
-          l.video = undefined;
-        }
-      });
+      clipLayers.forEach(unloadClip);
     };
   }
 </script>
