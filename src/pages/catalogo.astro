@@ -38,7 +38,7 @@ const features = [
   'Cada producto enlaza a su ficha en la web',
   pdfDate ? `Actualizado el ${pdfDate}` : '',
 ].filter(Boolean);
-const downloadName = `Catalogo-Defercol-${year}.pdf`;
+const downloadName = `Catalogo-DAFERCOL-${year}.pdf`;
 
 // Hero: cuadro de una parada del brand film; astro:assets genera las anchuras
 // intermedias para que un móvil no reciba el cuadro completo de 1920 px.
@@ -55,7 +55,7 @@ const hero = await getImage({
 
 <Layout
   title="Catálogo PDF"
-  description="Descarga el catálogo de productos de Defercol en PDF: válvulas, racores, tubería, instrumentación, reguladores, filtración, herramientas y repuestos."
+  description="Descarga el catálogo de productos de DAFERCOL en PDF: válvulas, racores, tubería, instrumentación, reguladores, filtración, herramientas y repuestos."
 >
   <section class="page-hero page-hero--image">
     <!-- Escena de tubería del brand film (parada 3), en 1x y 2x para pantallas retina. -->
@@ -80,7 +80,7 @@ const hero = await getImage({
 
   <section class="section">
     <div class="container download">
-      <figure class="doc" role="img" aria-label={`Vista previa de la portada del catálogo Defercol ${year}`}>
+      <figure class="doc" role="img" aria-label={`Vista previa de la portada del catálogo DAFERCOL ${year}`}>
         {
           coverExists ? (
             <img class="doc__image" src={coverPath} alt="" width="1240" height="1754" loading="eager" decoding="async" />
@@ -100,7 +100,7 @@ const hero = await getImage({
                 />
                 <div class="doc__brand">
                   <span class="doc__mark">D</span>
-                  <span>Defercol</span>
+                  <span>DAFERCOL</span>
                 </div>
                 <div class="doc__title">
                   <span class="doc__kicker">Catálogo de productos</span>
@@ -133,7 +133,7 @@ const hero = await getImage({
         antes que la portada para que la acción quede dentro del pliegue.
       -->
       <div class="card download__card">
-        <h2>Catálogo Defercol</h2>
+        <h2>Catálogo DAFERCOL</h2>
         <p class="download__meta">
           {meta.map((m, i) => (
             <>
@@ -155,7 +155,7 @@ const hero = await getImage({
             ) : (
               <a
                 class="btn btn-whatsapp"
-                href={whatsappLink('Hola Defercol, quiero recibir el catálogo en PDF.')}
+                href={whatsappLink('Hola DAFERCOL, quiero recibir el catálogo en PDF.')}
                 target="_blank"
                 rel="noopener"
               >
@@ -198,7 +198,7 @@ const hero = await getImage({
         <p class="muted">Manejamos muchas más de las que aparecen aquí. Escríbenos y la conseguimos.</p>
         <a
           class="btn btn-whatsapp btn-sm"
-          href={whatsappLink('Hola Defercol, busco una referencia que no está en el catálogo: ')}
+          href={whatsappLink('Hola DAFERCOL, busco una referencia que no está en el catálogo: ')}
           target="_blank"
           rel="noopener"
         >

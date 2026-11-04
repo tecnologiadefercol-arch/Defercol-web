@@ -1,5 +1,6 @@
 ---
 import { nav, whatsappLink } from '../data/site';
+import Logo from './Logo.astro';
 
 const current = Astro.url.pathname.replace(/\/$/, '') || '/';
 const isActive = (href: string) => (href === '/' ? current === '/' : current.startsWith(href));
@@ -12,10 +13,14 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 -->
 <header class="site-header glass--thin" transition:persist="site-header">
   <div class="container header-inner">
-    <!-- Sin aria-label: el nombre accesible sale del texto visible (Lighthouse label-content-name-mismatch). -->
+    <!--
+      Logo horizontal, la versión principal del manual para web. Se muestra la
+      versión a color sobre el cristal claro y la negativa cuando el header pasa
+      a oscuro (film del inicio, pie). El nombre accesible es el texto oculto.
+    -->
     <a href="/" class="brand">
-      <span class="brand-mark" aria-hidden="true">D</span>
-      <span class="brand-name">Defercol</span><span class="visually-hidden">, ir al inicio</span>
+      <Logo class="brand-logo" sizes="(max-width: 860px) 164px, 190px" />
+      <span class="visually-hidden">DAFERCOL, ir al inicio</span>
     </a>
 
     <button
@@ -185,28 +190,61 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
   /* En el inicio el fondo del documento es navy: lo que el header desenfoca en
      la parte alta (antes del film) ya es oscuro y no hay gris en el primer pintado. */
   :global(body:has(.film)) {
-    background: var(--navy-900);
+    background: var(--brand-noche);
   }
 
   .site-header.on-dark,
   :global(body:has(.film)) .site-header {
     color-scheme: dark;
-    --glass-thin-bg: rgba(7, 26, 51, 0.55);
-    --glass-border: rgba(255, 255, 255, 0.12);
-    --glass-highlight: rgba(255, 255, 255, 0.14);
-    --color-heading: #f7f9fc;
-    --color-text: #e8edf4;
-    --color-text-2: #a3b0c0;
-    --color-border: rgba(255, 255, 255, 0.12);
-    --color-surface-raised: #16243a;
-    --color-primary-soft: rgba(159, 192, 239, 0.14);
+    --glass-thin-bg: rgba(14, 37, 72, 0.66);
+    --glass-border: rgba(211, 217, 224, 0.12);
+    --glass-highlight: rgba(255, 255, 255, 0.1);
+    --color-heading: #ffffff;
+    --color-text: #e6ebf1;
+    --color-text-2: #b7c1cc;
+    --color-border: rgba(211, 217, 224, 0.14);
+    --color-border-strong: rgba(211, 217, 224, 0.3);
+    --color-surface-raised: #112b52;
+    --color-primary-soft: rgba(156, 181, 218, 0.14);
     --color-brand-fill: #ffffff;
-    --color-brand-fill-hover: #ffffff;
-    --color-on-brand: var(--navy-800);
-    --color-focus: #8ab4f8;
-    --shadow-rgb: 0 0 0;
-    --glass-fallback: rgba(7, 26, 51, 0.92);
+    --color-brand-fill-hover: #e4eaf4;
+    --color-on-brand: var(--brand-noche);
+    --color-accent: #e0353c;
+    --color-focus: #8fb0e6;
+    --shadow-rgb: 3 10 22;
+    --glass-fallback: rgba(14, 37, 72, 0.94);
     color: var(--color-text);
+  }
+
+  /* Logo: a color sobre claro, negativo sobre oscuro (manual, pág. 9: fondos permitidos). */
+  .brand :global(.logo--negativo),
+  .site-header.on-dark .brand :global(.logo--color),
+  :global(body:has(.film)) .site-header .brand :global(.logo--color) {
+    display: none;
+  }
+
+  .site-header.on-dark .brand :global(.logo--negativo),
+  :global(body:has(.film)) .site-header .brand :global(.logo--negativo) {
+    display: block;
+  }
+
+  /* Modo oscuro del sistema o forzado: el header es azul noche en todas las páginas. */
+  :global(:root[data-theme='dark']) .brand :global(.logo--color) {
+    display: none;
+  }
+
+  :global(:root[data-theme='dark']) .brand :global(.logo--negativo) {
+    display: block;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .brand :global(.logo--color) {
+      display: none;
+    }
+
+    :global(:root:not([data-theme='light'])) .brand :global(.logo--negativo) {
+      display: block;
+    }
   }
 
   .header-inner {
@@ -218,39 +256,19 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
     min-height: var(--header-h);
   }
 
+  /* Área de protección del manual: x = alto de la D (≈28 % del alto del logo, unos
+     12 px). El header deja 14 px arriba y abajo y el menú queda a más de 2x. */
   .brand {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
+    flex: none;
     text-decoration: none;
-    font-weight: var(--weight-bold);
-    font-size: var(--text-xl);
-    letter-spacing: var(--tracking-snug);
-    color: var(--color-heading);
     border-radius: var(--radius-sm);
   }
 
-  .brand-mark {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 40px;
-    height: 40px;
-    border-radius: var(--radius-sm);
-    background: var(--color-brand-fill);
-    color: var(--color-on-brand);
-    font-size: 1.15rem;
-  }
-
-  .brand-mark::after {
-    content: '';
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--color-accent);
+  .brand :global(.brand-logo) {
+    height: var(--logo-h);
+    width: auto;
   }
 
   .nav {
@@ -271,17 +289,23 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
     display: inline-block;
     padding: var(--space-2) 0;
     font-size: var(--text-sm);
-    font-weight: var(--weight-medium);
+    font-weight: var(--weight-semibold);
+    letter-spacing: 0.01em;
     color: var(--color-text);
     text-decoration: none;
     border-bottom: 2px solid transparent;
-    border-radius: 2px;
+    border-radius: 0;
     transition:
       color var(--dur-fast) var(--ease-out),
       border-color var(--dur-fast) var(--ease-out);
   }
 
-  .nav a:not(.btn):hover,
+  .nav a:not(.btn):hover {
+    color: var(--color-heading);
+    border-color: var(--color-border-strong);
+  }
+
+  /* Página actual: la aguja roja del manómetro marca dónde estás. */
   .nav a[aria-current='page'] {
     color: var(--color-heading);
     border-color: var(--color-accent);
@@ -346,7 +370,7 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
       background: var(--color-surface-raised);
       border: 1px solid var(--color-border);
       border-top: 0;
-      border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+      border-radius: 0 0 var(--radius-lg) var(--radius-lg);
       box-shadow: var(--shadow-3);
       opacity: 0;
       transform: translateY(-8px);
@@ -379,6 +403,7 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 
     .nav a[aria-current='page'] {
       background: var(--color-primary-soft);
+      box-shadow: inset 3px 0 0 var(--color-accent);
     }
 
     /* En el menú móvil el CTA es un objetivo táctil completo (44 px), no btn-sm. */

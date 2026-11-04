@@ -5,7 +5,7 @@ Esta carpeta la genera el comando:
 Produce dos archivos a partir de los productos del sitio (src/content/products)
 y del árbol de categorías (src/data/site.ts):
 
-  catalogo-defercol.pdf   el catálogo que descarga /catalogo
+  catalogo-dafercol.pdf   el catálogo que descarga /catalogo
   portada.webp            la vista previa de la portada en /catalogo
 
 No los edites a mano: vuelve a correr el comando cuando cambien productos,

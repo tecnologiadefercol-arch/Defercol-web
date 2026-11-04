@@ -1,6 +1,6 @@
-# Defercol — Landing page
+# DAFERCOL — Landing page
 
-Sitio web de Defercol construido con [Astro](https://astro.build) 5. Es un sitio 100 % estático:
+Sitio web de DAFERCOL SCG SAS construido con [Astro](https://astro.build) 5. Es un sitio 100 % estático:
 no necesita servidor ni base de datos y se puede publicar en Netlify, Vercel, Cloudflare Pages o
 cualquier hosting de archivos estáticos.
 
@@ -27,7 +27,7 @@ src/
   content.config.ts       Esquema de la colección de productos
   content/products/*.md   Un archivo por producto (define la URL)
   layouts/Layout.astro    HTML base, SEO (meta, Open Graph, JSON-LD), header, footer y WhatsApp
-  components/             Header, Footer, WhatsAppButton, ProductCard
+  components/             Header, Footer, Logo, WhatsAppButton, ProductCard, CatalogFilm
   pages/
     index.astro           Inicio
     productos/index.astro Catálogo web con filtros por marca, categoría y búsqueda
@@ -36,12 +36,42 @@ src/
     contacto.astro        Formulario que abre WhatsApp con el mensaje listo
     catalogo.astro        Descarga del catálogo PDF
     404.astro
-  styles/global.css       Variables de color, tipografía y utilidades
+  styles/global.css       Sistema de diseño: tokens de marca, tipografía, controles
 public/
-  catalogo/               Aquí va catalogo-defercol.pdf
+  catalogo/               catalogo-dafercol.pdf y portada.webp (los genera `npm run catalogo`)
+  fonts/                  Archivo 900 expandida y Barlow 400–700 (manual de marca)
+  marca/                  Logos web e íconos de app (los generan los scripts de scripts/marca/)
   images/productos/       Imágenes de productos
-  robots.txt, favicon.svg, og-default.png
+  robots.txt, favicon.ico, apple-touch-icon.png, site.webmanifest, og-default.png
+assets/marca/             Manual de marca (PDF), logo original y avatares del manual
+scripts/marca/            Generadores de logos, íconos e imagen para redes
 ```
+
+## Marca
+
+La identidad sale del **Manual de Marca DAFERCOL v1.0** (`assets/marca/`). Lo esencial:
+
+- **Color.** Azul DAFERCOL `#163B6E` para nombre, títulos y textos principales; azul noche
+  `#0E2548` para fondos en negativo (film del inicio, heros, pie); rojo manómetro `#D2232A`
+  solo como acento puntual (raya de las etiquetas, página actual, progreso), nunca en
+  botones ni fondos; aceros `#D3D9E0` `#9AA6B2` `#5F6E7E` y gris texto `#6B7A8B`.
+- **Tipografía.** Archivo 900 expandida (118 %) para titulares grandes; Barlow para todo
+  lo demás. Etiquetas en mayúsculas espaciadas. Ambas alojadas en `public/fonts/`.
+- **Logo.** Componente `Logo.astro`: versión a color sobre blanco o gris muy claro,
+  negativa sobre azul noche o azul DAFERCOL; mínimo 160 px de ancho en pantalla. No
+  redibujar ni recomponer.
+
+Recursos derivados (correr de nuevo si cambian los originales):
+
+| Comando | Genera |
+| ------- | ------ |
+| `node scripts/marca/logos.mjs` | `public/marca/logo-{color,negativo}-*.webp` y `.png` desde `assets/marca/dafercol-horizontal-color.png`. El negativo reproduce el de la pág. 4 del manual (nombre y línea en blanco, piezas sin contorno). |
+| `node scripts/marca/iconos.mjs` | `favicon.ico` (símbolo reducido, pág. 5), `apple-touch-icon.png` e íconos del manifiesto, desde los avatares de la pág. 11. |
+| `node scripts/marca/og.mjs` | `public/og-default.png` (1200 × 630). |
+| `swift scripts/marca/recorte-manual.swift …` | Renderiza una zona del PDF del manual a PNG (así se sacaron los avatares). |
+
+Cuando el cliente entregue los archivos oficiales en SVG y la versión negativa, conviene
+reemplazar los derivados de `public/marca/`.
 
 ## Cómo agregar un producto
 
@@ -93,12 +123,12 @@ El script vive en `scripts/catalogo/build.mjs` y necesita Google Chrome (o
 `CHROME_PATH=/ruta/al/chrome`). Tarda unos 10 segundos.
 
 - **Peso.** Las fotos se reducen a miniaturas JPEG de 240 px (≈ 200 ppp al tamaño
-  impreso) y Chrome las incrusta sin recomprimir. El texto es vectorial y la tipografía
-  Inter (licencia OFL, en `scripts/catalogo/fonts/`) se incrusta solo con los caracteres
-  usados.
+  impreso) y Chrome las incrusta sin recomprimir. El texto es vectorial y las tipografías
+  de la marca (Archivo y Barlow, licencia OFL, de `public/fonts/`) se incrustan solo con
+  los caracteres usados.
 - **Navegación.** El índice y las tarjetas son enlaces; el PDF trae marcadores por
   categoría y subcategoría en el panel lateral del lector.
-- **Contacto.** Mientras `contactIsPlaceholder` sea verdadero, el PDF muestra web, correo
+- **Contacto.** Mientras `whatsappIsPlaceholder` sea verdadero, el PDF muestra web, correo
   y horario, y el botón de WhatsApp lleva a `/contacto`. Con los datos reales, vuelve a
   generar el PDF.
 - **Cuándo regenerarlo.** Cada vez que cambien productos, fotos, categorías o contacto.
@@ -106,8 +136,9 @@ El script vive en `scripts/catalogo/build.mjs` y necesita Google Chrome (o
 
 ## Pendientes antes de publicar
 
-- [ ] Reemplazar teléfono, WhatsApp, correo, dirección y horario en `src/data/site.ts`.
-- [ ] Cambiar `site` en `astro.config.mjs` y la URL del sitemap en `public/robots.txt` por el dominio real.
+- [x] WhatsApp y teléfono reales en `src/data/site.ts` (+57 311 210 9248, confirmado el 3-nov-2026).
+- [ ] Dirección, correo y horario reales en `src/data/site.ts` (la dirección se oculta mientras sea de plantilla).
+- [ ] Cuando www.dafercol.com apunte a Vercel: definir `SITE_URL=https://www.dafercol.com` (Vercel → Settings → Environment Variables, o `.env`), volver a generar el catálogo y publicar. Hoy todo usa `https://defercol.vercel.app` (ver `astro.config.mjs`).
 - [ ] Regenerar el catálogo con `npm run catalogo` cuando estén los datos de contacto reales.
 - [ ] Reemplazar los productos de ejemplo por los reales y agregar sus imágenes.
 - [ ] Ajustar los textos de "Quiénes somos".
@@ -115,7 +146,6 @@ El script vive en `scripts/catalogo/build.mjs` y necesita Google Chrome (o
 - [ ] Google Search Console: crear `.env` a partir de `.env.example` con el código de verificación
       y, una vez publicado, enviar `https://<dominio>/sitemap-index.xml`.
 - [ ] Crear o reclamar el perfil de Google Business y enlazarlo al sitio.
-- [ ] Opcional: reemplazar `public/og-default.png` por una imagen de marca (1200 × 630 px).
 
 ## Nota de seguridad
 

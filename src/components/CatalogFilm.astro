@@ -102,7 +102,7 @@ const stops: Stop[] = [
   },
   {
     id: 'por-que',
-    label: 'Por qué Defercol',
+    label: 'Por qué DAFERCOL',
     eyebrow: 'Tubería e instalación',
     title: 'Más que un proveedor.',
     body: 'Tubería, mangueras y reguladores para la instalación completa, con el respaldo técnico que tu operación exige.',
@@ -265,7 +265,7 @@ const config = { clips, focus: stops.map((s) => s.focus) };
        página se ensanchaba (517 px en 390) y se movía de lado. clip y no hidden:
        hidden haría del film un contenedor de scroll y rompería el sticky. */
     overflow-x: clip;
-    background: var(--navy-900);
+    background: var(--brand-noche);
     color: var(--color-text);
     --glass-shift: 0; /* -1..1, lo mueve el script con el scroll: la luz "resbala" */
   }
@@ -284,7 +284,7 @@ const config = { clips, focus: stops.map((s) => s.focus) };
     height: calc(100vh - var(--header-h));
     height: calc(100svh - var(--header-h));
     overflow: hidden;
-    background: var(--navy-900);
+    background: var(--brand-noche);
   }
 
   .film__layers,
@@ -402,18 +402,31 @@ const config = { clips, focus: stops.map((s) => s.focus) };
   .film__num {
     display: block;
     font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
     letter-spacing: var(--tracking-caps);
-    color: var(--color-text-2);
+    color: var(--acero-negativo);
   }
 
+  /* Etiqueta del manual: mayúsculas espaciadas en acero claro con la raya roja. */
   .film__eyebrow {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     margin-top: var(--space-3);
     font-size: var(--text-xs);
-    font-weight: var(--weight-bold);
+    font-weight: var(--weight-semibold);
+    line-height: 1.4;
     letter-spacing: var(--tracking-caps);
     text-transform: uppercase;
-    color: var(--color-accent-text);
+    color: var(--acero-claro);
+  }
+
+  .film__eyebrow::before {
+    content: '';
+    flex: none;
+    width: 22px;
+    height: 3px;
+    background: var(--brand-rojo);
   }
 
   .film__title {
@@ -463,7 +476,7 @@ const config = { clips, focus: stops.map((s) => s.focus) };
     font-weight: var(--weight-semibold);
     letter-spacing: var(--tracking-caps);
     text-transform: uppercase;
-    color: var(--color-text-3);
+    color: var(--acero-negativo);
   }
 
   /* Tarjetas de producto dentro del cristal: mismo material plano que el resto
@@ -635,10 +648,11 @@ const config = { clips, focus: stops.map((s) => s.focus) };
     transform: scale(1.25);
   }
 
+  /* Parada actual: el rojo de la aguja del manómetro. */
   .film__dot[aria-current='step'] i {
-    background: var(--color-accent);
+    background: var(--brand-rojo);
     transform: scale(1.4);
-    box-shadow: 0 0 0 5px rgb(242 118 27 / 0.25);
+    box-shadow: 0 0 0 4px rgb(210 35 42 / 0.28);
   }
 
   .film__dot:focus-visible {
@@ -656,9 +670,10 @@ const config = { clips, focus: stops.map((s) => s.focus) };
     overflow: hidden;
     text-overflow: ellipsis;
     padding: var(--space-1) var(--space-3);
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-sm);
     font-size: var(--text-xs);
     font-weight: var(--weight-semibold);
+    letter-spacing: 0.04em;
     color: var(--color-heading);
     opacity: 0;
     pointer-events: none;
@@ -689,7 +704,7 @@ const config = { clips, focus: stops.map((s) => s.focus) };
     width: 100%;
     transform-origin: 0 50%;
     transform: scaleX(0);
-    background: var(--color-accent);
+    background: var(--brand-rojo);
   }
 
   /* Pista discreta: píldora de una línea con un chevron de 16 px que late. */
@@ -712,7 +727,7 @@ const config = { clips, focus: stops.map((s) => s.focus) };
 
   .film__hint svg {
     flex: none;
-    color: var(--color-accent);
+    color: var(--acero-claro);
     animation: film-beat 1.7s ease-in-out infinite;
   }
 
@@ -759,7 +774,7 @@ const config = { clips, focus: stops.map((s) => s.focus) };
     height: 14px;
     border-radius: 50%;
     border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top-color: var(--color-accent);
+    border-top-color: var(--brand-rojo);
     animation: film-spin 0.9s linear infinite;
   }
 

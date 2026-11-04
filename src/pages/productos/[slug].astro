@@ -45,7 +45,7 @@ const productUrl = new URL(`/productos/${product.id}`, site.url).toString();
  * asesor identificar la referencia en un clic.
  */
 const message = [
-  'Hola Defercol, quiero cotizar:',
+  'Hola DAFERCOL, quiero cotizar:',
   `• ${title}${sku ? ` (Ref. ${sku})` : ''} — ${brandName}`,
   'Cantidad: ',
   productUrl,
@@ -336,8 +336,10 @@ const jsonLd = {
 
   .product__specs-title {
     margin: 0 0 var(--space-1);
+    font-family: var(--font-sans);
+    font-stretch: normal;
     font-size: var(--text-xs);
-    font-weight: var(--weight-bold);
+    font-weight: var(--weight-semibold);
     letter-spacing: var(--tracking-caps);
     text-transform: uppercase;
     color: var(--color-text-2);

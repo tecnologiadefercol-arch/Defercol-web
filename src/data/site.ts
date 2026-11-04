@@ -2,21 +2,31 @@
  * Datos generales del sitio. Todo lo que cambia con frecuencia
  * (teléfonos, dirección, marcas, categorías) vive aquí.
  */
+/**
+ * URL pública: la fija `site` en astro.config.mjs (variable SITE_URL). El respaldo
+ * es el despliegue actual en Vercel; www.dafercol.com aún no apunta al proyecto.
+ */
+const SITE_URL = String(import.meta.env.SITE || 'https://defercol.vercel.app').replace(/\/+$/, '');
+
 export const site = {
-  name: 'Defercol',
-  legalName: 'Defercol S.A.S.',
+  // Nombre y razón social según el Manual de Marca DAFERCOL v1.0 (assets/marca/).
+  name: 'DAFERCOL',
+  legalName: 'DAFERCOL SCG SAS',
   tagline: 'Racores, válvulas e instrumentación industrial',
+  /** Eslogan oficial del manual (versión horizontal con eslogan, tarjeta de presentación). */
+  slogan: 'Racores, válvulas y accesorios para alta presión y temperatura',
   description:
     'Distribuidor industrial en Colombia de racores, válvulas, tubería e instrumentación Swagelok, Valveco, Comfit y Ferreinstrumentos. Asesoría técnica y cotización por WhatsApp.',
-  url: 'https://www.defercol.com',
-  // BLOQUEANTE antes de publicar: teléfono, WhatsApp y dirección son de plantilla.
-  // Todos los CTAs de cotización pasan por whatsappLink(); con este número el
-  // flujo principal termina en un chat inexistente. Mientras sigan siendo de
-  // plantilla, `contactIsPlaceholder` es true: el pie oculta la dirección y la
-  // construcción avisa (ver abajo).
-  phone: '+57 300 000 0000',
-  whatsapp: '573000000000', // solo dígitos, con indicativo de país
-  email: 'ventas@defercol.com',
+  url: SITE_URL,
+  // WhatsApp confirmado por el cliente (3-nov-2026); el manual usa el mismo número
+  // como teléfono en la tarjeta y la firma. Todos los CTAs de cotización pasan por
+  // whatsappLink().
+  phone: '+57 311 210 9248',
+  whatsapp: '573112109248', // solo dígitos, con indicativo de país
+  // BLOQUEANTE antes de publicar: la dirección sigue siendo de plantilla. Mientras
+  // lo sea, `addressIsPlaceholder` es true: el pie y /contacto la ocultan, los
+  // datos estructurados la omiten y la construcción avisa (ver abajo).
+  email: 'ventas@dafercol.com',
   address: {
     street: 'Calle 00 # 00-00',
     city: 'Bogotá',
@@ -24,19 +34,22 @@ export const site = {
     country: 'CO',
   },
   hours: 'Lunes a viernes, 8:00 a. m. a 5:30 p. m.',
-  catalogPath: '/catalogo/catalogo-defercol.pdf',
+  catalogPath: '/catalogo/catalogo-dafercol.pdf',
   googleSiteVerification: import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION ?? '',
 };
 
-/** Número de WhatsApp y dirección de plantilla (aún sin datos reales del cliente). */
+/** Datos de plantilla que aún no han llegado del cliente. Se revisan por separado. */
 const PLACEHOLDER_WHATSAPP = '573000000000';
-export const contactIsPlaceholder =
-  site.whatsapp === PLACEHOLDER_WHATSAPP || /^Calle 00\b/.test(site.address.street);
+export const whatsappIsPlaceholder = site.whatsapp === PLACEHOLDER_WHATSAPP;
+export const addressIsPlaceholder = /^Calle 00\b/.test(site.address.street);
+/** Alguno de los datos de contacto sigue siendo de plantilla. */
+export const contactIsPlaceholder = whatsappIsPlaceholder || addressIsPlaceholder;
 
-if (contactIsPlaceholder && import.meta.env.PROD) {
-  console.warn(
-    '[Defercol] site.ts: el WhatsApp/teléfono/dirección siguen siendo de plantilla. No publicar sin los datos reales.',
-  );
+if (import.meta.env.PROD) {
+  if (whatsappIsPlaceholder)
+    console.warn('[DAFERCOL] site.ts: el WhatsApp sigue siendo de plantilla. No publicar sin el número real.');
+  if (addressIsPlaceholder)
+    console.warn('[DAFERCOL] site.ts: la dirección sigue siendo de plantilla; el sitio la oculta hasta tener la real.');
 }
 
 export const nav = [
@@ -223,6 +236,6 @@ export const subcategoryBySlug = (category: string, sub: string) =>
   categoryBySlug(category)?.subcategories.find((s) => s.slug === sub);
 
 /** Enlace de WhatsApp con mensaje opcional prellenado. */
-export function whatsappLink(message = 'Hola Defercol, quiero una cotización.') {
+export function whatsappLink(message = 'Hola DAFERCOL, quiero una cotización.') {
   return `https://wa.me/${site.whatsapp}?text=${encodeURIComponent(message)}`;
 }

@@ -1,15 +1,22 @@
 ---
-import { site, nav, brands, whatsappLink, contactIsPlaceholder } from '../data/site';
+import { site, nav, brands, whatsappLink, addressIsPlaceholder } from '../data/site';
+import Logo from './Logo.astro';
 
 const year = new Date().getFullYear();
 ---
 
-<!-- El pie es oscuro con cualquier esquema: hereda el alcance .theme-dark del sistema. -->
+<!--
+  El pie es azul noche con cualquier esquema (fondo en negativo del manual): hereda
+  el alcance .theme-dark del sistema y lleva el logo negativo con el eslogan.
+-->
 <footer class="site-footer theme-dark">
   <div class="container footer-grid">
     <div class="footer-about">
-      <a href="/" class="footer-brand">Defercol</a>
-      <p>Racores, válvulas e instrumentación para la industria colombiana.</p>
+      <a href="/" class="footer-brand">
+        <Logo variant="negativo" class="footer-logo" sizes="220px" loading="lazy" />
+        <span class="visually-hidden">DAFERCOL, ir al inicio</span>
+      </a>
+      <p class="footer-slogan">{site.slogan}</p>
       <a class="btn btn-whatsapp btn-sm" href={whatsappLink()} target="_blank" rel="noopener">
         Cotizar por WhatsApp
       </a>
@@ -35,7 +42,7 @@ const year = new Date().getFullYear();
       <address>
         {
           /* La dirección se muestra solo cuando ya es real (site.ts). */
-          !contactIsPlaceholder && (
+          !addressIsPlaceholder && (
             <p>
               {site.address.street}<br />
               {site.address.city}, Colombia
@@ -60,10 +67,32 @@ const year = new Date().getFullYear();
 
 <style>
   .site-footer {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
     margin-top: auto;
     background: var(--color-footer-bg);
     color: var(--color-text-2);
     border-top: 1px solid var(--color-border);
+  }
+
+  /* Corte diagonal en azul DAFERCOL con filo de acero, como en la tarjeta del manual. */
+  .site-footer::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    width: clamp(160px, 26vw, 380px);
+    aspect-ratio: 1.6;
+    background: linear-gradient(
+      to top left,
+      var(--brand-azul) calc(50% - 0.5px),
+      rgba(211, 217, 224, 0.5) calc(50% - 0.5px),
+      rgba(211, 217, 224, 0.5) calc(50% + 0.5px),
+      transparent calc(50% + 0.5px)
+    );
+    pointer-events: none;
   }
 
   .footer-grid {
@@ -73,28 +102,38 @@ const year = new Date().getFullYear();
     padding-block: var(--space-9) var(--space-8);
   }
 
-  .footer-about p {
-    max-width: 36ch;
-  }
-
   .footer-brand {
     display: inline-block;
-    margin-bottom: var(--space-2);
-    font-size: var(--text-xl);
-    font-weight: var(--weight-bold);
-    letter-spacing: var(--tracking-snug);
-    color: var(--color-heading);
-    text-decoration: none;
     border-radius: var(--radius-sm);
   }
 
-  .footer__title {
-    margin: 0 0 var(--space-4);
+  /* 220 px de ancho: x (alto de la D) ≈ 14 px de área de protección alrededor. */
+  .footer-brand :global(.footer-logo) {
+    width: 220px;
+    height: auto;
+  }
+
+  .footer-slogan {
+    max-width: 30ch;
+    margin: var(--space-5) 0 var(--space-5);
     font-size: var(--text-xs);
-    font-weight: var(--weight-bold);
+    font-weight: var(--weight-semibold);
+    line-height: 1.7;
     letter-spacing: var(--tracking-caps);
     text-transform: uppercase;
-    color: var(--color-heading);
+    color: var(--acero-negativo);
+  }
+
+  /* Etiqueta, no titular: Barlow en mayúsculas espaciadas (los h2 globales usan Archivo). */
+  .footer__title {
+    margin: 0 0 var(--space-4);
+    font-family: var(--font-sans);
+    font-stretch: normal;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--acero-negativo);
   }
 
   .site-footer ul {
@@ -116,7 +155,7 @@ const year = new Date().getFullYear();
   }
 
   .site-footer a:not(.btn):hover {
-    color: var(--color-accent-text);
+    color: #ffffff;
   }
 
   .site-footer address a {

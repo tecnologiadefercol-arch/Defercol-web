@@ -1,0 +1,45 @@
+---
+/**
+ * Logo horizontal de DAFERCOL (versión principal del manual para web).
+ *
+ * Archivos en public/marca/, generados por scripts/marca/logos.mjs a partir de
+ * assets/marca/dafercol-horizontal-color.png. No redibujar ni recomponer: el
+ * manual pide usar siempre los archivos originales.
+ *
+ *   variant="color"     fondos blanco y gris muy claro
+ *   variant="negativo"  fondos azul noche y azul DAFERCOL
+ *   variant="pair"      las dos; el CSS del contenedor muestra la que toca
+ *                       (.logo--color / .logo--negativo)
+ *
+ * Tamaño mínimo en pantalla: 160 px de ancho. Las imágenes son decorativas
+ * (alt vacío): el enlace que las contiene lleva el nombre accesible.
+ */
+interface Props {
+  variant?: 'pair' | 'color' | 'negativo';
+  class?: string;
+  sizes?: string;
+  loading?: 'eager' | 'lazy';
+}
+
+const { variant = 'pair', class: cls, sizes = '190px', loading = 'eager' } = Astro.props;
+const variants = variant === 'pair' ? (['color', 'negativo'] as const) : ([variant] as const);
+const files = (v: string) => ({
+  src: `/marca/logo-${v}-400.webp`,
+  srcset: `/marca/logo-${v}-400.webp 400w, /marca/logo-${v}-800.webp 800w`,
+});
+---
+
+{
+  variants.map((v) => (
+    <img
+      class:list={['logo', `logo--${v}`, cls]}
+      {...files(v)}
+      sizes={sizes}
+      width="190"
+      height="44"
+      alt=""
+      decoding="async"
+      loading={loading}
+    />
+  ))
+}

@@ -2,7 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import { getImage } from 'astro:assets';
 import heroStill from '../assets/film/stop-2@2x.webp';
-import { site, whatsappLink, contactIsPlaceholder } from '../data/site';
+import { site, whatsappLink, addressIsPlaceholder } from '../data/site';
 
 // Mapa: cuando exista el iframe de Google Business (Google Maps > Compartir >
 // Insertar un mapa), añadir una <section class="map"> después del formulario.
@@ -15,7 +15,7 @@ const jsonLd = {
   url: site.url,
   telephone: site.phone,
   email: site.email,
-  ...(contactIsPlaceholder
+  ...(addressIsPlaceholder
     ? {}
     : {
         address: {
@@ -46,7 +46,7 @@ const hero = await getImage({
 
 <Layout
   title="Contacto"
-  description="Cotizaciones y asesoría técnica en racores, válvulas e instrumentación industrial. WhatsApp, teléfono y correo de Defercol."
+  description="Cotizaciones y asesoría técnica en racores, válvulas e instrumentación industrial. WhatsApp, teléfono y correo de DAFERCOL."
   jsonLd={jsonLd}
 >
   <section class="page-hero page-hero--image">
@@ -96,7 +96,7 @@ const hero = await getImage({
           <span class="muted">Para planos, listados y fichas</span>
         </a>
         {
-          !contactIsPlaceholder && (
+          !addressIsPlaceholder && (
             <div class="card contact-card">
               <span class="contact-card__label">Dirección</span>
               <strong>{site.address.street}</strong>
@@ -290,7 +290,7 @@ const hero = await getImage({
       const empresa = value('empresa');
       const texto = value('text');
       const contacto = [value('correo'), value('telefono')].filter(Boolean).join(' · ');
-      const out: Part[] = ['Hola Defercol, soy ', nombre || { hint: 'tu nombre' }];
+      const out: Part[] = ['Hola DAFERCOL, soy ', nombre || { hint: 'tu nombre' }];
       if (empresa) out.push(` de ${empresa}`);
       out.push('.\n\n', texto || { hint: 'tu mensaje' });
       if (contacto) out.push(`\n\nContacto: ${contacto}`);
@@ -401,7 +401,7 @@ const hero = await getImage({
   }
 
   a.contact-card:hover {
-    border-color: var(--color-accent);
+    border-color: var(--color-heading);
   }
 
   /* WhatsApp: tinte suave y el icono en la etiqueta; sin contorno verde permanente
@@ -415,10 +415,10 @@ const hero = await getImage({
     align-items: center;
     gap: var(--space-2, 8px);
     font-size: var(--text-xs, 0.75rem);
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: var(--tracking-caps, 0.1em);
     text-transform: uppercase;
-    color: var(--color-accent-text, #b8520a);
+    color: var(--color-eyebrow);
   }
 
   .contact-card__icon {

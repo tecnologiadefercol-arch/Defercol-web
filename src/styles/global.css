@@ -1,87 +1,174 @@
 /* ============================================================================
-   Defercol · hoja global
-   Sistema de diseño v1 (scratchpad/team/design-system.md), bloques A–I:
+   DAFERCOL · hoja global
+   Sistema de diseño v2: identidad del Manual de Marca DAFERCOL v1.0 (oct. 2026,
+   assets/marca/). Bloques:
    A tokens claros · B oscuro (sistema, forzado y alcance .theme-dark) ·
    C responsive y rendimiento · D base y tipografía · E botones, enlaces, foco ·
    F cristal · G movimiento · H controles · I movimiento reducido ·
    J heros de página, prosa y alias de rendimiento.
+
+   Reglas del manual que gobiernan la hoja:
+   - Azul DAFERCOL para nombre, títulos y textos principales; azul noche para
+     fondos en negativo (film, pie, heros).
+   - Rojo manómetro solo como acento puntual (máx. 5 % de la pieza): la raya de
+     las etiquetas, el indicador de página actual, el progreso del recorrido.
+     Nunca en botones ni fondos.
+   - Archivo 900 expandida (118 %) para titulares grandes; nunca en texto corrido.
+     Barlow para todo lo demás: Regular textos, Medium datos y tablas, SemiBold
+     subtítulos, Bold referencias y códigos. Etiquetas en mayúsculas espaciadas.
    ========================================================================== */
+
+/* Fuentes del manual, alojadas en el sitio (subconjunto latino de Google Fonts, OFL). */
+@font-face {
+  font-family: "Archivo";
+  font-style: normal;
+  font-weight: 900;
+  font-stretch: 118%;
+  font-display: swap;
+  src: url("/fonts/archivo-900-118.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Barlow";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/barlow-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Barlow";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/barlow-500.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Barlow";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/barlow-600.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Barlow";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/barlow-700.woff2") format("woff2");
+}
+
+/* Respaldos con métricas ajustadas: el cambio a la fuente web no mueve el texto. */
+@font-face {
+  font-family: "Barlow fallback";
+  src: local("Arial");
+  size-adjust: 92%;
+  ascent-override: 108%;
+  descent-override: 22%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Archivo fallback";
+  src: local("Arial Black"), local("Arial Bold"), local("Arial");
+  size-adjust: 104%;
+  ascent-override: 88%;
+  descent-override: 21%;
+  line-gap-override: 0%;
+}
 
 :root {
   color-scheme: light dark;
 
-  /* ---- primitivas ---- */
-  --navy-950: #050e1c; --navy-900: #071a33; --navy-800: #0b2545; --navy-700: #123563;
-  --navy-600: #1b4680; --navy-500: #2a5a9c; --navy-400: #4f80c2; --navy-300: #86aadc;
-  --navy-200: #b7cdeb; --navy-100: #dbe6f6; --navy-50: #eef3fa;
-  --orange-700: #9a4408; --orange-600: #b8520a; --orange-500: #d6620f; --orange-400: #f2761b;
-  --orange-300: #ff9a4d; --orange-200: #ffc08a; --orange-100: #fde3cc; --orange-50: #fff4ea;
-  --gray-900: #0f1623; --gray-800: #1b2430; --gray-700: #2d3845; --gray-500: #5b6776;
-  --gray-400: #7b8794; --gray-300: #a7b3c1; --gray-200: #cfd6de; --gray-150: #dde3ea;
-  --gray-100: #eef1f5; --gray-50: #f4f6f9;
+  /* ---- marca (manual, pág. 7) ---- */
+  --brand-azul: #163b6e;      /* Azul DAFERCOL · Pantone 534 C · nombre, contornos, textos principales */
+  --brand-noche: #0e2548;     /* Azul noche · Pantone 2767 C · fondos en negativo, portadas */
+  --brand-rojo: #d2232a;      /* Rojo manómetro · Pantone 1795 C · acento, máx. 5 % */
+  --acero-claro: #d3d9e0;     /* brillos, fondos suaves */
+  --acero-medio: #9aa6b2;     /* cara principal de las piezas */
+  --acero-oscuro: #5f6e7e;    /* sombras de las piezas */
+  --gris-texto: #6b7a8b;      /* SCG SAS, textos secundarios */
+  --acero-negativo: #a9b4c0;  /* gris de "SCG SAS" en el logo negativo */
+
+  /* ---- escalas derivadas (estados de interfaz) ---- */
+  --navy-950: #091a35; --navy-900: #0e2548; --navy-800: #163b6e; --navy-700: #1c4a86;
+  --navy-600: #245a9f; --navy-500: #3a6fb5; --navy-400: #6890c8; --navy-300: #9cb5da;
+  --navy-200: #c6d4ea; --navy-100: #e4eaf4; --navy-50: #f2f5fa;
+  --red-700: #a8191f; --red-600: #bc1e25; --red-500: #d2232a; --red-400: #e5484e; --red-100: #fbe4e5;
+  --gray-900: #121b27; --gray-800: #1f2a37; --gray-700: #334050; --gray-600: #4c5a6a;
+  --gray-500: #5f6e7e; --gray-400: #6b7a8b; --gray-300: #9aa6b2; --gray-200: #d3d9e0;
+  --gray-150: #e2e7ec; --gray-100: #edf0f3; --gray-50: #f5f7f9;
   --green-wa: #25d366; --green-wa-dark: #1da851;
 
   /* ---- color semántico (claro) ---- */
   --color-bg: #ffffff;
-  --color-surface: var(--gray-50);
+  --color-surface: var(--gray-50);          /* gris muy claro: fondo permitido para el logo a color */
   --color-surface-2: var(--gray-100);
   --color-surface-raised: #ffffff;
   --color-border: var(--gray-150);
-  --color-border-strong: #c5cdd6;
+  --color-border-strong: #c3ccd5;
   --color-text: var(--gray-800);
-  --color-text-2: var(--gray-500);
-  --color-text-3: #64707d; /* 5,05:1 sobre blanco, 4,67:1 sobre superficie (texto de 12 px) */
-  --color-heading: var(--navy-800);
-  --color-link: var(--navy-800);
-  --color-brand-fill: var(--navy-800);
-  --color-brand-fill-hover: var(--navy-900);
+  --color-text-2: var(--gray-600);          /* 7,0:1 sobre blanco */
+  --color-text-3: var(--acero-oscuro);      /* 5,2:1 sobre blanco, 4,9:1 sobre superficie */
+  --color-heading: var(--brand-azul);
+  --color-link: var(--brand-azul);
+  --color-link-hover: var(--brand-noche);
+  --color-brand-fill: var(--brand-azul);
+  --color-brand-fill-hover: var(--brand-noche);
   --color-on-brand: #ffffff;
-  --color-primary-soft: #e6ecf5;
-  --color-accent: var(--orange-400);
-  --color-accent-hover: #e86d12;
-  --color-accent-text: var(--orange-600);
-  --color-on-accent: var(--navy-800);
+  --color-primary-soft: var(--navy-100);
+  --color-eyebrow: var(--brand-azul);
+  --color-accent: var(--brand-rojo);        /* solo detalles: rayas, indicadores, progreso */
+  --color-accent-hover: var(--red-600);
+  --color-accent-text: var(--red-600);      /* 6,1:1 sobre blanco; texto rojo solo en avisos */
+  --color-on-accent: #ffffff;
   --color-whatsapp: var(--green-wa);
   --color-whatsapp-hover: #1fc45c;
-  --color-on-whatsapp: var(--navy-800);
-  --color-focus: #2f6fd6;
-  --color-error: #d93025;
+  --color-on-whatsapp: var(--brand-noche);
+  --color-focus: var(--navy-500);
+  --color-error: #c62828;
   --color-success: #1f8f4e;
   --color-warning: #b8720a;
-  --color-footer-bg: var(--navy-900);
-  --color-scrim: 7 26 51;
-  --shadow-rgb: 11 37 69;
-  --focus-rgb: 47 111 214;
+  --color-footer-bg: var(--brand-noche);
+  --color-scrim: 14 37 72;                  /* azul noche en RGB, para velos con alfa */
+  --shadow-rgb: 14 37 72;
+  --focus-rgb: 58 111 181;
 
   /* ---- alias de compatibilidad (migrar y retirar) ---- */
-  --color-primary: var(--navy-800);
-  --color-primary-dark: var(--navy-900);
+  --color-primary: var(--brand-azul);
+  --color-primary-dark: var(--brand-noche);
   --color-accent-dark: var(--color-accent-hover);
   --color-muted: var(--color-text-2);
   --color-whatsapp-dark: var(--color-whatsapp-hover);
 
-  /* ---- tipografía ---- */
-  --font-sans: system-ui, -apple-system, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  /* ---- tipografía (manual, pág. 8) ---- */
+  --font-sans: "Barlow", "Barlow fallback", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-display: "Archivo", "Archivo fallback", "Arial Black", system-ui, sans-serif;
+  --font-mono: var(--font-sans); /* referencias y códigos: Barlow Bold con cifras tabulares (.mono) */
   --font: var(--font-sans);
   --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-md: 1rem;
-  --text-lg: clamp(1.0625rem, 1.01rem + 0.22vw, 1.1875rem);
-  --text-xl: 1.25rem;
-  --text-2xl: clamp(1.3125rem, 1.19rem + 0.54vw, 1.625rem);
-  --text-3xl: clamp(1.625rem, 1.38rem + 1.09vw, 2.25rem);
-  --text-4xl: clamp(2rem, 1.61rem + 1.74vw, 3rem);
-  --text-display: clamp(2.25rem, 1.57rem + 3.04vw, 4rem);
-  --leading-tight: 1.05;
-  --leading-snug: 1.15;
+  --text-sm: 0.9375rem;
+  --text-md: 1.0625rem;
+  --text-lg: clamp(1.125rem, 1.07rem + 0.24vw, 1.25rem);
+  --text-xl: 1.3125rem;
+  --text-2xl: clamp(1.375rem, 1.25rem + 0.54vw, 1.6875rem);
+  /* Archivo expandida es ancha (≈0,74 em por carácter): las escalas de titular son
+     más contenidas que con una sans normal para que las palabras largas quepan en 360 px. */
+  --text-3xl: clamp(1.375rem, 1.14rem + 1vw, 2rem);
+  --text-4xl: clamp(1.625rem, 1.2rem + 1.8vw, 2.625rem);
+  --text-display: clamp(1.75rem, 0.95rem + 3.4vw, 3.5rem);
+  --leading-tight: 1.08;
+  --leading-snug: 1.18;
   --leading-normal: 1.5;
   --leading-relaxed: 1.6;
-  --tracking-display: -0.03em;
-  --tracking-tight: -0.022em;
-  --tracking-snug: -0.014em;
+  --tracking-display: -0.01em;
+  --tracking-tight: -0.008em;
+  --tracking-snug: -0.004em;
   --tracking-normal: 0;
-  --tracking-caps: 0.1em;
+  --tracking-caps: 0.2em;      /* etiquetas: mayúsculas espaciadas */
+  --tracking-caps-sm: 0.12em;  /* insignias y datos cortos */
   --weight-regular: 400;
   --weight-medium: 500;
   --weight-semibold: 600;
@@ -98,43 +185,46 @@
   --card-pad-compact: var(--space-4);
   --panel-pad: clamp(24px, 0.72rem + 3.5vw, 56px);
   --header-h: 72px;
+  --logo-h: 44px;              /* horizontal: 190 px de ancho (mínimo del manual: 160 px) */
   --control-h-sm: 36px;
-  --control-h: 44px;
+  --control-h: 46px;
   --control-h-lg: 52px;
 
-  /* ---- radios ---- */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  /* ---- radios: formas técnicas, esquinas apenas suavizadas como las piezas del símbolo ---- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
   --radius-pill: 999px;
+  --radius-btn: var(--radius-md);
   --radius: var(--radius-lg);      /* alias legado */
 
   /* ---- elevación ---- */
   --shadow-0: none;
-  --shadow-1: 0 1px 2px rgb(var(--shadow-rgb) / 0.04), 0 2px 8px rgb(var(--shadow-rgb) / 0.06);
-  --shadow-2: 0 4px 12px rgb(var(--shadow-rgb) / 0.08), 0 12px 32px rgb(var(--shadow-rgb) / 0.12);
-  --shadow-3: 0 8px 24px rgb(var(--shadow-rgb) / 0.12), 0 24px 64px rgb(var(--shadow-rgb) / 0.18);
-  --shadow-4: 0 40px 90px rgba(0, 0, 0, 0.38), 0 10px 30px rgba(0, 0, 0, 0.18);
+  --shadow-1: 0 1px 2px rgb(var(--shadow-rgb) / 0.05), 0 1px 4px rgb(var(--shadow-rgb) / 0.04);
+  --shadow-2: 0 4px 12px rgb(var(--shadow-rgb) / 0.08), 0 12px 28px rgb(var(--shadow-rgb) / 0.1);
+  --shadow-3: 0 8px 24px rgb(var(--shadow-rgb) / 0.12), 0 24px 56px rgb(var(--shadow-rgb) / 0.16);
+  --shadow-4: 0 40px 90px rgba(4, 12, 26, 0.42), 0 10px 30px rgba(4, 12, 26, 0.2);
   --shadow-whatsapp: 0 10px 30px rgba(37, 211, 102, 0.35);
   --shadow: var(--shadow-1);       /* alias legado */
   --shadow-lg: var(--shadow-2);    /* alias legado */
 
   /* ---- cristal (claro) ---- */
-  --glass-bg: linear-gradient(160deg, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0.66) 100%);
-  --glass-blur: blur(24px) saturate(1.6);
-  --glass-rim: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.4) 30%, rgba(11, 37, 69, 0.08) 60%, rgba(255, 255, 255, 0.7) 100%);
-  --glass-border: rgba(11, 37, 69, 0.1);
+  --glass-bg: linear-gradient(160deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 255, 255, 0.7) 100%);
+  --glass-blur: blur(24px) saturate(1.5);
+  --glass-rim: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.4) 30%, rgba(22, 59, 110, 0.08) 60%, rgba(255, 255, 255, 0.7) 100%);
+  --glass-border: rgba(22, 59, 110, 0.1);
   --glass-highlight: rgba(255, 255, 255, 0.75);
+  --glass-glow: rgba(156, 181, 218, 0.16);
   --glass-shadow: var(--shadow-3);
   --glass-radius: var(--radius-xl);
   --glass-shift: 0;
   --glass-fallback: rgba(255, 255, 255, 0.97);
-  --glass-thin-bg: rgba(255, 255, 255, 0.72);
+  --glass-thin-bg: rgba(255, 255, 255, 0.8);
   --glass-thin-blur: blur(18px) saturate(1.5);
-  --glass-flat-bg: rgba(11, 37, 69, 0.04);
-  --glass-flat-bg-hover: rgba(11, 37, 69, 0.07);
-  --glass-flat-border: rgba(11, 37, 69, 0.1);
+  --glass-flat-bg: rgba(22, 59, 110, 0.035);
+  --glass-flat-bg-hover: rgba(22, 59, 110, 0.065);
+  --glass-flat-border: rgba(22, 59, 110, 0.1);
   --glass-flat-highlight: rgba(255, 255, 255, 0.8);
 
   /* ---- movimiento ---- */
@@ -159,98 +249,106 @@
 }
 
 
-/* B1 · automático por preferencia del sistema */
+/* B1 · automático por preferencia del sistema: la página pasa a azul noche (fondo en negativo del manual). */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --color-bg: #08111f;
-    --color-surface: #0f1b2e;
-    --color-surface-2: #16243a;
-    --color-surface-raised: #16243a;
-    --color-border: rgba(255, 255, 255, 0.1);
-    --color-border-strong: rgba(255, 255, 255, 0.2);
-    --color-text: #e8edf4;
-    --color-text-2: #a3b0c0;
-    --color-text-3: #8f9cad; /* 5,59:1 sobre #16243a */
-    --color-heading: #f7f9fc;
-    --color-link: #9fc0ef;
-    --color-brand-fill: #e8edf4;
-    --color-brand-fill-hover: #ffffff;
-    --color-on-brand: #0b2545;
-    --color-primary-soft: rgba(159, 192, 239, 0.14);
-    --color-accent-hover: #ff8a38;
-    --color-accent-text: #ff9a4d;
+    --color-bg: #0a1a33;
+    --color-surface: #0e2548;
+    --color-surface-2: #143059;
+    --color-surface-raised: #112b52;
+    --color-border: rgba(211, 217, 224, 0.12);
+    --color-border-strong: rgba(211, 217, 224, 0.24);
+    --color-text: #e6ebf1;
+    --color-text-2: #b7c1cc;
+    --color-text-3: #9aa6b2; /* acero medio: 5,8:1 sobre #112b52 */
+    --color-heading: #ffffff;
+    --color-link: #9cb5da;
+    --color-link-hover: #ffffff;
+    --color-brand-fill: #ffffff;
+    --color-brand-fill-hover: #e4eaf4;
+    --color-on-brand: #0e2548;
+    --color-primary-soft: rgba(156, 181, 218, 0.14);
+    --color-eyebrow: #d3d9e0;
+    --color-accent: #e0353c;
+    --color-accent-hover: #e5484e;
+    --color-accent-text: #ff8a8e;
     --color-whatsapp-hover: #3ddc78;
-    --color-focus: #8ab4f8;
-    --color-error: #ff6b61;
+    --color-focus: #8fb0e6;
+    --color-error: #ff7b74;
     --color-success: #4ccd7a;
     --color-warning: #ffb547;
-    --color-footer-bg: #050e1c;
-    --shadow-rgb: 0 0 0;
-    --focus-rgb: 138 180 248;
+    --color-footer-bg: #0e2548;
+    --shadow-rgb: 3 10 22;
+    --focus-rgb: 143 176 230;
     --shadow-1: 0 1px 2px rgb(var(--shadow-rgb) / 0.3), 0 2px 8px rgb(var(--shadow-rgb) / 0.3);
     --shadow-2: 0 4px 12px rgb(var(--shadow-rgb) / 0.35), 0 12px 32px rgb(var(--shadow-rgb) / 0.4);
     --shadow-3: 0 8px 24px rgb(var(--shadow-rgb) / 0.4), 0 24px 64px rgb(var(--shadow-rgb) / 0.5);
-    --glass-bg: linear-gradient(160deg, rgba(28, 52, 86, 0.42) 0%, rgba(9, 28, 54, 0.5) 60%, rgba(7, 26, 51, 0.56) 100%);
-    --glass-blur: blur(34px) saturate(1.7) brightness(1.04);
-    --glass-rim: linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.14) 28%, rgba(255, 255, 255, 0.04) 55%, rgba(255, 255, 255, 0.22) 100%);
-    --glass-border: rgba(255, 255, 255, 0.12);
-    --glass-highlight: rgba(255, 255, 255, 0.28);
+    --glass-bg: linear-gradient(160deg, rgba(22, 59, 110, 0.46) 0%, rgba(14, 37, 72, 0.56) 60%, rgba(14, 37, 72, 0.64) 100%);
+    --glass-blur: blur(34px) saturate(1.6) brightness(1.04);
+    --glass-rim: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.12) 28%, rgba(255, 255, 255, 0.04) 55%, rgba(211, 217, 224, 0.22) 100%);
+    --glass-border: rgba(211, 217, 224, 0.14);
+    --glass-highlight: rgba(255, 255, 255, 0.24);
+    --glass-glow: rgba(156, 181, 218, 0.12);
     --glass-shadow: var(--shadow-4);
-    --glass-fallback: rgba(7, 26, 51, 0.92);
-    --glass-thin-bg: rgba(7, 26, 51, 0.3);
+    --glass-fallback: rgba(14, 37, 72, 0.94);
+    --glass-thin-bg: rgba(14, 37, 72, 0.4);
     --glass-thin-blur: blur(18px) saturate(1.5);
-    --glass-flat-bg: rgba(255, 255, 255, 0.07);
-    --glass-flat-bg-hover: rgba(255, 255, 255, 0.12);
-    --glass-flat-border: rgba(255, 255, 255, 0.14);
-    --glass-flat-highlight: rgba(255, 255, 255, 0.14);
+    --glass-flat-bg: rgba(211, 217, 224, 0.06);
+    --glass-flat-bg-hover: rgba(211, 217, 224, 0.11);
+    --glass-flat-border: rgba(211, 217, 224, 0.14);
+    --glass-flat-highlight: rgba(255, 255, 255, 0.12);
   }
 }
 
-/* B2 · forzado (data-theme) y alcance local (.film, .site-footer) — copia idéntica de B1 */
+/* B2 · forzado (data-theme) y alcance local (.film, .site-footer, .page-hero) — copia idéntica de B1 */
 :root[data-theme="dark"],
 .theme-dark {
   color-scheme: dark;
-  --color-bg: #08111f;
-  --color-surface: #0f1b2e;
-  --color-surface-2: #16243a;
-  --color-surface-raised: #16243a;
-  --color-border: rgba(255, 255, 255, 0.1);
-  --color-border-strong: rgba(255, 255, 255, 0.2);
-  --color-text: #e8edf4;
-  --color-text-2: #a3b0c0;
-  --color-text-3: #8f9cad;
-  --color-heading: #f7f9fc;
-  --color-link: #9fc0ef;
-  --color-brand-fill: #e8edf4;
-  --color-brand-fill-hover: #ffffff;
-  --color-on-brand: #0b2545;
-  --color-primary-soft: rgba(159, 192, 239, 0.14);
-  --color-accent-hover: #ff8a38;
-  --color-accent-text: #ff9a4d;
+  --color-bg: #0a1a33;
+  --color-surface: #0e2548;
+  --color-surface-2: #143059;
+  --color-surface-raised: #112b52;
+  --color-border: rgba(211, 217, 224, 0.12);
+  --color-border-strong: rgba(211, 217, 224, 0.24);
+  --color-text: #e6ebf1;
+  --color-text-2: #b7c1cc;
+  --color-text-3: #9aa6b2;
+  --color-heading: #ffffff;
+  --color-link: #9cb5da;
+  --color-link-hover: #ffffff;
+  --color-brand-fill: #ffffff;
+  --color-brand-fill-hover: #e4eaf4;
+  --color-on-brand: #0e2548;
+  --color-primary-soft: rgba(156, 181, 218, 0.14);
+  --color-eyebrow: #d3d9e0;
+  --color-accent: #e0353c;
+  --color-accent-hover: #e5484e;
+  --color-accent-text: #ff8a8e;
   --color-whatsapp-hover: #3ddc78;
-  --color-focus: #8ab4f8;
-  --color-error: #ff6b61;
+  --color-focus: #8fb0e6;
+  --color-error: #ff7b74;
   --color-success: #4ccd7a;
   --color-warning: #ffb547;
-  --color-footer-bg: #050e1c;
-  --shadow-rgb: 0 0 0;
-  --focus-rgb: 138 180 248;
+  --color-footer-bg: #0e2548;
+  --shadow-rgb: 3 10 22;
+  --focus-rgb: 143 176 230;
   --shadow-1: 0 1px 2px rgb(var(--shadow-rgb) / 0.3), 0 2px 8px rgb(var(--shadow-rgb) / 0.3);
   --shadow-2: 0 4px 12px rgb(var(--shadow-rgb) / 0.35), 0 12px 32px rgb(var(--shadow-rgb) / 0.4);
   --shadow-3: 0 8px 24px rgb(var(--shadow-rgb) / 0.4), 0 24px 64px rgb(var(--shadow-rgb) / 0.5);
-  --glass-bg: linear-gradient(160deg, rgba(28, 52, 86, 0.42) 0%, rgba(9, 28, 54, 0.5) 60%, rgba(7, 26, 51, 0.56) 100%);
-  --glass-blur: blur(34px) saturate(1.7) brightness(1.04);
-  --glass-rim: linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.14) 28%, rgba(255, 255, 255, 0.04) 55%, rgba(255, 255, 255, 0.22) 100%);
-  --glass-border: rgba(255, 255, 255, 0.12);
-  --glass-highlight: rgba(255, 255, 255, 0.28);
+  --glass-bg: linear-gradient(160deg, rgba(22, 59, 110, 0.46) 0%, rgba(14, 37, 72, 0.56) 60%, rgba(14, 37, 72, 0.64) 100%);
+  --glass-blur: blur(34px) saturate(1.6) brightness(1.04);
+  --glass-rim: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.12) 28%, rgba(255, 255, 255, 0.04) 55%, rgba(211, 217, 224, 0.22) 100%);
+  --glass-border: rgba(211, 217, 224, 0.14);
+  --glass-highlight: rgba(255, 255, 255, 0.24);
+  --glass-glow: rgba(156, 181, 218, 0.12);
   --glass-shadow: var(--shadow-4);
-  --glass-fallback: rgba(7, 26, 51, 0.92);
-  --glass-thin-bg: rgba(7, 26, 51, 0.3);
+  --glass-fallback: rgba(14, 37, 72, 0.94);
+  --glass-thin-bg: rgba(14, 37, 72, 0.4);
   --glass-thin-blur: blur(18px) saturate(1.5);
-  --glass-flat-bg: rgba(255, 255, 255, 0.07);
-  --glass-flat-bg-hover: rgba(255, 255, 255, 0.12);
-  --glass-flat-border: rgba(255, 255, 255, 0.14);
-  --glass-flat-highlight: rgba(255, 255, 255, 0.14);
+  --glass-flat-bg: rgba(211, 217, 224, 0.06);
+  --glass-flat-bg-hover: rgba(211, 217, 224, 0.11);
+  --glass-flat-border: rgba(211, 217, 224, 0.14);
+  --glass-flat-highlight: rgba(255, 255, 255, 0.12);
 }
 
 /* El film y el pie son oscuros siempre: el texto hereda del alcance. */
@@ -268,15 +366,16 @@
 @media (max-width: 860px) {
   :root {
     --header-h: 64px;
+    --logo-h: 38px;            /* 164 px de ancho: por encima del mínimo de 160 px del manual */
     --card-pad: var(--space-4);
     --glass-blur: blur(20px) saturate(1.5);
-    --glass-radius: 20px;
+    --glass-radius: 10px;
   }
 
   /* El alcance oscuro redefine el cristal: repetir el ajuste para que llegue al film y al pie. */
   .theme-dark {
     --glass-blur: blur(20px) saturate(1.5);
-    --glass-radius: 20px;
+    --glass-radius: 10px;
   }
 }
 
@@ -328,6 +427,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-optical-sizing: auto;
+  font-kerning: normal;
 }
 
 img,
@@ -342,11 +442,27 @@ a {
   text-underline-offset: 0.18em;
 }
 
+a:hover {
+  color: var(--color-link-hover);
+}
+
 h1, h2, h3, h4 {
   margin: 0 0 0.5em;
   color: var(--color-heading);
   font-weight: var(--weight-bold);
   text-wrap: balance;
+  overflow-wrap: break-word;
+}
+
+/* Titulares grandes: Archivo 900 expandida, la voz del logotipo. */
+h1,
+h2,
+.display,
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-stretch: 118%;
+  font-synthesis: none;
 }
 
 h1 {
@@ -357,27 +473,28 @@ h1 {
 
 h2 {
   font-size: var(--text-3xl);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  line-height: 1.12;
+  letter-spacing: var(--tracking-tight);
 }
 
+/* Subtítulos: Barlow SemiBold/Bold (Archivo no baja de tamaños grandes). */
 h3 {
   font-size: var(--text-xl);
-  line-height: 1.2;
+  line-height: 1.22;
   letter-spacing: var(--tracking-snug);
-  font-weight: var(--weight-semibold);
+  font-weight: var(--weight-bold);
 }
 
 h4 {
   font-size: var(--text-md);
   line-height: 1.3;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   font-weight: var(--weight-semibold);
 }
 
 .display {
   font-size: var(--text-display);
-  line-height: 1.02;
+  line-height: 1.04;
   letter-spacing: var(--tracking-display);
 }
 
@@ -393,9 +510,12 @@ p {
   max-width: 60ch;
 }
 
+/* Referencias, códigos y cifras: Barlow Bold con cifras tabulares (manual, pág. 8). */
 .mono {
   font-family: var(--font-mono);
+  font-weight: var(--weight-bold);
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
 
 .container {
@@ -421,14 +541,34 @@ p {
   font-size: var(--text-lg);
 }
 
+/* Etiqueta: mayúsculas espaciadas con la raya roja del manómetro (portada del manual). */
 .eyebrow {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: var(--space-3);
   font-size: var(--text-xs);
-  font-weight: var(--weight-bold);
+  font-weight: var(--weight-semibold);
+  line-height: 1.4;
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
-  color: var(--color-accent-text);
+  color: var(--color-eyebrow);
+}
+
+.eyebrow::before {
+  content: "";
+  flex: none;
+  width: 22px;
+  height: 3px;
+  background: var(--color-accent);
+}
+
+/* Regla de título: la línea azul de 2 px bajo los encabezados del manual. */
+.rule {
+  height: 2px;
+  border: 0;
+  margin: 0;
+  background: var(--color-heading);
 }
 
 .grid {
@@ -472,12 +612,12 @@ p {
   min-height: var(--control-h);
   padding: 0 var(--space-5);
   border: 1px solid transparent;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-btn);
   font: inherit;
   font-size: var(--text-md);
   font-weight: var(--weight-semibold);
   line-height: 1.2;
-  letter-spacing: -0.005em;
+  letter-spacing: 0.01em;
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
@@ -520,22 +660,17 @@ p {
   font-size: 1.0625rem;
 }
 
-.btn-primary {
-  background: var(--color-accent);
-  color: var(--color-on-accent);
-}
-
-.btn-primary:hover {
-  background: var(--color-accent-hover);
-}
-
+/* Primario: azul DAFERCOL (blanco con texto azul noche en fondos oscuros). El rojo no va en botones. */
+.btn-primary,
 .btn-secondary {
   background: var(--color-brand-fill);
   color: var(--color-on-brand);
 }
 
+.btn-primary:hover,
 .btn-secondary:hover {
   background: var(--color-brand-fill-hover);
+  color: var(--color-on-brand);
 }
 
 .btn-ghost,
@@ -548,6 +683,8 @@ p {
 .btn-ghost:hover,
 .btn-outline:hover {
   background: var(--color-surface-2);
+  border-color: var(--color-heading);
+  color: var(--color-heading);
 }
 
 /* Cristal claro sobre imagen o vídeo. Único botón con backdrop; no va dentro de .glass. */
@@ -563,8 +700,8 @@ p {
 
 .btn-glass:hover,
 .btn-outline-light:hover {
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--navy-800);
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--brand-noche);
   border-color: transparent;
 }
 
@@ -575,6 +712,7 @@ p {
 
 .btn-whatsapp:hover {
   background: var(--color-whatsapp-hover);
+  color: var(--color-on-whatsapp);
 }
 
 .btn-link {
@@ -602,12 +740,14 @@ p {
 }
 
 .link:hover {
+  color: var(--color-link-hover);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
+/* Antes naranja; con el manual el acento no va en texto: es el enlace de marca. */
 .link--accent {
-  color: var(--color-accent-text);
+  color: var(--color-link);
 }
 
 .link-chevron::after {
@@ -632,15 +772,15 @@ p {
 /* ---- badge ---- */
 .badge {
   display: inline-block;
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-pill);
+  padding: 3px var(--space-2);
+  border-radius: var(--radius-sm);
   background: var(--color-primary-soft);
   color: var(--color-heading);
-  font-size: var(--text-xs);
+  font-size: 0.6875rem;
   font-weight: var(--weight-bold);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-caps-sm);
   text-transform: uppercase;
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 /* ---- tarjeta ---- */
@@ -649,7 +789,7 @@ p {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--card-pad);
-  box-shadow: var(--shadow-1);
+  box-shadow: none;
 }
 
 /* Tarjeta clicable (product-card, cat-card, contact-card enlazada). */
@@ -665,7 +805,7 @@ p {
 .card--interactive:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-2);
-  border-color: var(--color-border-strong);
+  border-color: var(--color-heading);
 }
 
 .card--interactive:active {
@@ -712,7 +852,7 @@ p {
   top: var(--space-2);
   z-index: var(--z-skip);
   padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-btn);
   background: var(--color-brand-fill);
   color: var(--color-on-brand);
   font-weight: var(--weight-semibold);
@@ -747,7 +887,7 @@ p {
   pointer-events: none;
   background:
     radial-gradient(110% 70% at calc(10% + var(--glass-shift) * 18%) 0%, rgba(255, 255, 255, 0.16), transparent 52%),
-    radial-gradient(70% 55% at calc(95% - var(--glass-shift) * 10%) 105%, rgba(242, 118, 27, 0.14), transparent 60%),
+    radial-gradient(70% 55% at calc(95% - var(--glass-shift) * 10%) 105%, var(--glass-glow), transparent 60%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 30%);
 }
 
@@ -902,9 +1042,9 @@ html.js .reveal.is-in {
 }
 
 .input--search {
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-md);
   padding-left: 40px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%237b8794' stroke-width='1.8' stroke-linecap='round'%3E%3Ccircle cx='9' cy='9' r='5.5'/%3E%3Cpath d='M13.5 13.5L17 17'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236b7a8b' stroke-width='1.8' stroke-linecap='round'%3E%3Ccircle cx='9' cy='9' r='5.5'/%3E%3Cpath d='M13.5 13.5L17 17'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: 14px center;
   background-size: 18px;
@@ -981,7 +1121,7 @@ html.js .reveal.is-in {
   gap: var(--space-1);
   padding: var(--space-1);
   background: var(--color-surface-2);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-lg);
   max-width: 100%;
   overflow-x: auto;
   scroll-snap-type: x proximity;
@@ -997,7 +1137,7 @@ html.js .reveal.is-in {
   min-height: 40px;
   padding: 0 var(--space-4);
   border: 0;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--color-text-2);
   font: inherit;
@@ -1019,7 +1159,8 @@ html.js .reveal.is-in {
 .seg__btn[aria-pressed="true"] {
   background: var(--color-surface-raised);
   color: var(--color-heading);
-  box-shadow: var(--shadow-1);
+  font-weight: var(--weight-semibold);
+  box-shadow: var(--shadow-1), inset 0 -2px 0 var(--color-accent);
 }
 
 .seg__btn:active {
@@ -1047,7 +1188,7 @@ html.js .reveal.is-in {
   min-height: 32px;
   padding: 0 var(--space-2) 0 var(--space-3);
   border: 1px solid transparent;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-md);
   background: var(--color-surface-2);
   color: var(--color-text);
   font: inherit;
@@ -1116,7 +1257,7 @@ html.js .reveal.is-in {
   width: 18px;
   height: 18px;
   margin: 0;
-  accent-color: var(--color-accent);
+  accent-color: var(--color-brand-fill);
 }
 
 
@@ -1167,9 +1308,26 @@ html.js .reveal.is-in {
    (el texto es blanco con cualquier esquema), así que hereda el alcance oscuro. */
 .page-hero {
   position: relative;
-  background: linear-gradient(135deg, var(--navy-900), var(--navy-800) 70%);
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--brand-noche);
   color: #fff;
   padding-block: clamp(var(--space-7), 2rem + 2.5vw, var(--space-9));
+}
+
+/* Corte diagonal en azul DAFERCOL con filo de acero: el recurso de la tarjeta de
+   presentación del manual (pág. 11). Va detrás del texto y no lleva contenido. */
+.page-hero::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  width: clamp(140px, 24vw, 340px);
+  aspect-ratio: 1.6;
+  background:
+    linear-gradient(to top left, var(--brand-azul) calc(50% - 0.5px), rgba(211, 217, 224, 0.55) calc(50% - 0.5px), rgba(211, 217, 224, 0.55) calc(50% + 0.5px), transparent calc(50% + 0.5px));
+  pointer-events: none;
 }
 
 .page-hero h1 {
@@ -1177,14 +1335,15 @@ html.js .reveal.is-in {
 }
 
 .page-hero p {
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(255, 255, 255, 0.84);
   max-width: 60ch;
   font-size: var(--text-lg);
   line-height: var(--leading-normal);
 }
 
 .page-hero .eyebrow {
-  color: var(--orange-300);
+  --color-eyebrow: var(--acero-claro);
+  --color-accent: var(--brand-rojo);
 }
 
 /* Variante con imagen de fondo: la foto va detrás y un degradado navy
@@ -1246,7 +1405,11 @@ html.js .reveal.is-in {
   color: var(--color-link);
 }
 
-/* Selección de texto y scrollbars siguen la marca. */
+/* Selección de texto en azul de marca. */
 ::selection {
-  background: rgb(242 118 27 / 0.3);
+  background: rgb(22 59 110 / 0.22);
+}
+
+.theme-dark ::selection {
+  background: rgb(156 181 218 / 0.35);
 }
